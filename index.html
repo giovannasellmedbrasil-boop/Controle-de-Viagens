@@ -1,0 +1,1367 @@
+<title>Controle de Viagens · Sellmed Brasil</title>
+<style>
+  :root{
+    --bg:#f2f5f9;
+    --surface:#ffffff;
+    --surface-2:#eaf0f7;
+    --border:#dde5f0;
+    --text:#132038;
+    --text-muted:#5c6c85;
+    --navy:#123a6b;
+    --navy-deep:#0a2144;
+    --teal:#1f96a0;
+    --teal-soft:#e3f4f5;
+    --green:#4c9a3a;
+    --green-soft:#e9f5e3;
+    --amber:#b1750f;
+    --amber-soft:#faf0dc;
+    --danger:#b03c34;
+    --danger-soft:#faeae8;
+    --radius:12px;
+    --shadow:0 1px 2px rgba(10,33,68,.06),0 10px 28px -16px rgba(10,33,68,.22);
+    color-scheme:light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0b1622;
+      --surface:#111f30;
+      --surface-2:#16283c;
+      --border:#233348;
+      --text:#e8edf5;
+      --text-muted:#93a4bb;
+      --navy:#8fb8ea;
+      --navy-deep:#cfe0f7;
+      --teal:#57ccd3;
+      --teal-soft:#12333a;
+      --green:#7fce69;
+      --green-soft:#14301c;
+      --amber:#e3ac52;
+      --amber-soft:#332711;
+      --danger:#e58077;
+      --danger-soft:#3a1a17;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px -16px rgba(0,0,0,.5);
+      color-scheme:dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0b1622; --surface:#111f30; --surface-2:#16283c; --border:#233348;
+    --text:#e8edf5; --text-muted:#93a4bb; --navy:#8fb8ea; --navy-deep:#cfe0f7;
+    --teal:#57ccd3; --teal-soft:#12333a; --green:#7fce69; --green-soft:#14301c;
+    --amber:#e3ac52; --amber-soft:#332711; --danger:#e58077; --danger-soft:#3a1a17;
+    color-scheme:dark;
+  }
+  :root[data-theme="light"]{
+    --bg:#f2f5f9; --surface:#ffffff; --surface-2:#eaf0f7; --border:#dde5f0;
+    --text:#132038; --text-muted:#5c6c85; --navy:#123a6b; --navy-deep:#0a2144;
+    --teal:#1f96a0; --teal-soft:#e3f4f5; --green:#4c9a3a; --green-soft:#e9f5e3;
+    --amber:#b1750f; --amber-soft:#faf0dc; --danger:#b03c34; --danger-soft:#faeae8;
+    color-scheme:light;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:Calibri,Carlito,"Segoe UI",Verdana,sans-serif;
+    font-size:15px;
+    line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--teal);color:#fff;}
+  button,input,select{font-family:inherit;font-size:inherit;color:inherit;}
+  h1,h2,h3{text-wrap:balance;margin:0;}
+  table{border-collapse:collapse;}
+  .tabular{font-variant-numeric:tabular-nums;}
+
+  /* ---------- layout shell ---------- */
+  .page{max-width:1280px;margin:0 auto;padding:20px 24px 64px;}
+
+  header.top{
+    display:flex;align-items:center;gap:16px;
+    padding:14px 20px;margin-bottom:20px;
+    background:linear-gradient(180deg,var(--surface),var(--surface));
+    border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);
+    flex-wrap:wrap;
+  }
+  header.top img{height:46px;width:auto;display:block;flex-shrink:0;}
+  header.top .titles{display:flex;flex-direction:column;gap:2px;flex:1;min-width:220px;}
+  header.top h1{font-size:21px;font-weight:700;color:var(--navy);letter-spacing:.2px;}
+  header.top .sub{font-size:12.5px;color:var(--text-muted);letter-spacing:.4px;text-transform:uppercase;}
+  header.top .actions{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto;}
+
+  /* ---------- buttons ---------- */
+  .btn{
+    appearance:none;border:1px solid var(--border);background:var(--surface);color:var(--text);
+    padding:9px 14px;border-radius:9px;font-size:13.5px;font-weight:600;cursor:pointer;
+    display:inline-flex;align-items:center;gap:6px;transition:filter .12s,transform .05s;white-space:nowrap;
+  }
+  .btn:hover{filter:brightness(0.97);}
+  :root[data-theme="dark"] .btn:hover, @media (prefers-color-scheme:dark){.btn:hover{filter:brightness(1.15);}}
+  .btn:active{transform:translateY(1px);}
+  .btn:focus-visible{outline:2px solid var(--teal);outline-offset:2px;}
+  .btn-primary{background:var(--navy);border-color:var(--navy);color:#fff;}
+  :root[data-theme="dark"] .btn-primary, @media (prefers-color-scheme:dark){.btn-primary{color:#08131f;}}
+  .btn-ghost{background:transparent;}
+  .btn-danger{color:var(--danger);}
+  .btn-sm{padding:6px 10px;font-size:12.5px;border-radius:7px;}
+  .btn-icon{padding:6px 8px;}
+
+  /* ---------- KPI strip ---------- */
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:18px;}
+  .kpi{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    padding:14px 16px;box-shadow:var(--shadow);
+  }
+  .kpi .label{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--text-muted);font-weight:700;}
+  .kpi .value{font-size:24px;font-weight:700;color:var(--navy);margin-top:4px;}
+  .kpi .value.teal{color:var(--teal);}
+  .kpi .value.amber{color:var(--amber);}
+  .kpi .hint{font-size:11.5px;color:var(--text-muted);margin-top:2px;}
+
+  /* ---------- toolbar ---------- */
+  .toolbar{
+    display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;
+  }
+  .toolbar input[type="search"], .toolbar select{
+    background:var(--surface);border:1px solid var(--border);border-radius:9px;
+    padding:9px 12px;font-size:13.5px;color:var(--text);
+  }
+  .toolbar input[type="search"]{min-width:220px;flex:1;}
+  .toolbar .spacer{flex:1 1 auto;}
+  .status-pill-toggle{display:flex;border:1px solid var(--border);border-radius:9px;overflow:hidden;}
+  .status-pill-toggle button{
+    border:none;background:var(--surface);padding:8px 13px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text-muted);
+    border-right:1px solid var(--border);
+  }
+  .status-pill-toggle button:last-child{border-right:none;}
+  .status-pill-toggle button.active{background:var(--navy);color:#fff;}
+
+  /* ---------- table card ---------- */
+  .table-card{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    box-shadow:var(--shadow);overflow:hidden;
+  }
+  .table-scroll{overflow-x:auto;}
+  table.trips{width:100%;min-width:920px;}
+  table.trips thead th{
+    text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);
+    font-weight:700;padding:11px 14px;border-bottom:1px solid var(--border);background:var(--surface-2);
+    position:sticky;top:0;
+  }
+  table.trips tbody td{padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:top;font-size:13.5px;}
+  table.trips tbody tr:last-child td{border-bottom:none;}
+  table.trips tbody tr:hover{background:var(--surface-2);}
+  table.trips .via-name{font-weight:700;color:var(--text);}
+  table.trips .sol-text{color:var(--text-muted);font-size:12.5px;margin-top:2px;max-width:260px;}
+  table.trips .route{font-weight:600;}
+  table.trips .money{font-weight:700;white-space:nowrap;}
+  table.trips .muted{color:var(--text-muted);}
+  table.trips .row-actions{display:flex;gap:6px;justify-content:flex-end;}
+
+  .pill{
+    display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;
+    font-size:11.5px;font-weight:700;letter-spacing:.2px;white-space:nowrap;
+  }
+  .pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;}
+  .pill.ok{background:var(--green-soft);color:var(--green);}
+  .pill.pend{background:var(--amber-soft);color:var(--amber);}
+
+  .empty-state{padding:48px 24px;text-align:center;color:var(--text-muted);}
+  .empty-state .big{font-size:32px;margin-bottom:8px;}
+
+  /* ---------- modal ---------- */
+  .backdrop{
+    position:fixed;inset:0;background:rgba(8,18,32,.5);backdrop-filter:blur(2px);
+    display:flex;align-items:flex-start;justify-content:center;padding:5vh 16px;z-index:50;overflow-y:auto;
+  }
+  .modal{
+    background:var(--surface);border-radius:16px;border:1px solid var(--border);
+    width:100%;max-width:640px;box-shadow:0 30px 60px -20px rgba(0,0,0,.4);
+  }
+  .modal header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 20px;border-bottom:1px solid var(--border);
+  }
+  .modal header h2{font-size:17px;color:var(--navy);}
+  .modal .body{padding:20px;max-height:70vh;overflow-y:auto;}
+  .modal footer{display:flex;justify-content:flex-end;gap:8px;padding:14px 20px;border-top:1px solid var(--border);}
+
+  .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .field-grid .full{grid-column:1/-1;}
+  .field{display:flex;flex-direction:column;gap:5px;}
+  .field label{font-size:11.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;}
+  .field input,.field select,.field textarea{
+    background:var(--surface-2);border:1px solid var(--border);border-radius:8px;
+    padding:8px 10px;font-size:13.5px;color:var(--text);width:100%;
+  }
+  .field textarea{resize:vertical;min-height:54px;font-family:inherit;}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--teal);outline-offset:1px;}
+  fieldset{border:1px solid var(--border);border-radius:10px;padding:12px 14px 14px;margin:0 0 14px;}
+  fieldset legend{font-size:12px;font-weight:700;color:var(--navy);padding:0 6px;text-transform:uppercase;letter-spacing:.4px;}
+
+  .detail-row{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px dashed var(--border);font-size:13.5px;}
+  .detail-row:last-child{border-bottom:none;}
+  .detail-row .k{color:var(--text-muted);}
+  .detail-row .v{font-weight:600;text-align:right;}
+  .toggle-pax{
+    background:var(--teal-soft);color:var(--teal);border:1px solid transparent;border-radius:8px;
+    padding:8px 12px;font-size:13px;font-weight:700;cursor:pointer;width:100%;text-align:left;
+    display:flex;align-items:center;justify-content:space-between;margin-top:6px;
+  }
+  .pax-box{display:none;margin-top:8px;padding:10px 12px;background:var(--surface-2);border-radius:8px;}
+  .pax-box.show{display:block;}
+  .obs-box{margin-top:10px;padding:10px 12px;background:var(--amber-soft);color:var(--amber);border-radius:8px;font-size:12.5px;}
+
+  footer.foot{margin-top:26px;text-align:center;color:var(--text-muted);font-size:12px;}
+  footer.foot a{color:var(--teal);}
+
+  @media (max-width:760px){
+    .field-grid{grid-template-columns:1fr;}
+    table.trips{min-width:0;}
+    .table-scroll{overflow-x:auto;}
+  }
+
+  .print-only{display:none;}
+  @media print{
+    body{background:#fff;}
+    .print-only{display:block;margin-bottom:16px;}
+    .print-only h1{font-size:18px;color:var(--navy);margin-bottom:4px;}
+    .print-only .meta{font-size:12px;color:var(--text-muted);}
+    header.top .actions, .toolbar, .row-actions, #modalRoot, footer.foot{display:none !important;}
+    table.trips thead th:last-child, table.trips tbody td:last-child{display:none;}
+    .kpis{grid-template-columns:repeat(3,1fr);break-inside:avoid;}
+    .kpi{box-shadow:none;border:1px solid #ccc;}
+    .table-card{box-shadow:none;border:1px solid #ccc;}
+    .table-scroll{overflow:visible;}
+    table.trips{min-width:0;width:100%;}
+    table.trips thead th{position:static;}
+    tr{break-inside:avoid;}
+    .page{max-width:100%;padding:0;}
+  }
+</style>
+
+<div id="lock-screen" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#0a2144,#123a6b);font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;">
+  <form id="lock-form" style="background:#fff;border-radius:14px;padding:32px 28px;width:min(320px,88vw);box-shadow:0 20px 45px -20px rgba(10,33,68,.5);text-align:center;">
+    <div style="font-size:0.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#1f96a0;margin-bottom:6px;">Sellmed Brasil</div>
+    <h1 style="margin:0 0 18px;font-size:1.15rem;color:#132038;">Controle de Viagens</h1>
+    <input id="lock-input" type="password" placeholder="Senha de acesso" autocomplete="off" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1.5px solid #dde5f0;border-radius:9px;font-size:1rem;margin-bottom:10px;" />
+    <div id="lock-error" style="color:#b03c34;font-size:0.82rem;min-height:1.2em;margin-bottom:10px;"></div>
+    <button type="submit" style="width:100%;padding:12px;border:none;border-radius:999px;background:#123a6b;color:#fff;font-weight:700;font-size:0.95rem;cursor:pointer;">Entrar</button>
+  </form>
+</div>
+
+<div class="page" id="page-root" style="display:none;">
+
+  <header class="top">
+    <img src="data:image/webp;base64,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" alt="Sellmed Brasil">
+    <div class="titles">
+      <h1>Controle de Viagens</h1>
+      <div class="sub">Sellmed Brasil · Solicitações de aéreo e hospedagem</div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-ghost btn-sm" id="btnExportCsv" title="Baixar como CSV">⭳ CSV</button>
+      <button class="btn btn-ghost btn-sm" id="btnExportJson" title="Backup completo (JSON)">⭳ Backup</button>
+      <button class="btn btn-ghost btn-sm" id="btnImportJson" title="Restaurar de um backup (JSON)">⭱ Importar</button>
+      <input type="file" id="fileImport" accept="application/json" hidden>
+      <button class="btn btn-ghost btn-sm" id="btnSync" title="Buscar novas solicitações enviadas pelo formulário">🔄 Sincronizar solicitações</button>
+      <button class="btn btn-primary btn-sm" id="btnNew">+ Nova viagem</button>
+    </div>
+  </header>
+
+  <section class="kpis" id="kpis"></section>
+
+  <div class="toolbar">
+    <input type="search" id="search" placeholder="Buscar por viajante, solicitação ou trecho…">
+    <div class="status-pill-toggle" id="statusFilter">
+      <button data-v="todos" class="active">Todos</button>
+      <button data-v="ok">OK</button>
+      <button data-v="pend">Pendentes</button>
+    </div>
+    <select id="mesFilter"></select>
+    <select id="aereoFilter">
+      <option value="todos">Aéreo: todos</option>
+      <option value="com">Com aéreo</option>
+      <option value="sem">Sem aéreo</option>
+    </select>
+    <div class="spacer"></div>
+    <button class="btn btn-ghost btn-sm" id="btnExportPdf" title="Abre o diálogo de impressão do navegador — escolha &quot;Salvar como PDF&quot;">🖨 Exportar PDF</button>
+    <button class="btn btn-ghost btn-sm" id="btnReset" title="Restaurar os dados originais da planilha">↺ Restaurar dados originais</button>
+  </div>
+
+  <div id="printHeader" class="print-only"></div>
+
+  <div class="table-card">
+    <div class="table-scroll">
+      <table class="trips">
+        <thead>
+          <tr>
+            <th>Status</th>
+            <th>Viajante / Solicitação</th>
+            <th>Datas da viagem</th>
+            <th>Aéreo</th>
+            <th>Hospedagem</th>
+            <th>Valor final</th>
+            <th>Faturamento</th>
+            <th>Pagamento da fatura referente feito</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="empty-state" id="emptyState" style="display:none;">
+      <div class="big">🧳</div>
+      <div>Nenhuma viagem encontrada com esses filtros.</div>
+    </div>
+  </div>
+
+  <footer class="foot">Dados salvos localmente no seu navegador · Produtos que salvam vidas</footer>
+</div>
+
+<div id="modalRoot"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORAGE_KEY = "sellmedViagens.v5";
+  var IMPORTED_KEY = "sellmedViagens.formImportIds.v1";
+  // Mesma URL do Google Apps Script usada pelo formulário em
+  // solicitacao-viagem-app/assets/app.js — precisa do endpoint "?action=list"
+  // (adicionado em apps-script/Code.gs) publicado numa nova versão do deploy.
+  var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxrjJ2jvOQpgEz1DFnd_o91h1iVwOJj9iOiD8mKavqiaWbncoGVEMhpNlKs7O9mKTjuXw/exec";
+  var fmtBRL = new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"});
+
+  function money(n){ return fmtBRL.format(Number(n)||0); }
+  function uid(){ return "t" + Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
+
+  // ---------------------------------------------------------------
+  // Dados históricos (importados da planilha de junho–julho/2026)
+  // ---------------------------------------------------------------
+  var SEED_DATA = [
+    {status:"ok", mes:"JUNHO", dataCompra:"18/06/2026",
+     solicitacao:"Hospedagens reservadas: 1 diária em POA (23→24/06), 1 diária em Pelotas (24→25/06, sugestão Jacques Georges Business Hotel), 1 diária em POA (25→26/06)",
+     viajante:"Daniele Lopes", pax:{}, dataViagem:"Ida 23/06 · Volta 26/06",
+     aereo:{tem:"Já comprado pela viajante", trecho:"", valor:0, fee:0, forma:"N/A"},
+     hospedagem:{tem:"Sim", detalhe:"POA e Pelotas", valor:899.32, forma:"Faturado — fatura 21/06, venc. 01/07"},
+     valorFinal:899.32, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JUNHO", dataCompra:"18/06/2026", solicitacao:"Aéreo e hospedagem SP",
+     viajante:"Alice Moraes", pax:{}, dataViagem:"Ida 22/06 · Volta 23/06",
+     aereo:{tem:"Sim", trecho:"Maceió ⇄ SP", valor:2313.81, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Sim", detalhe:"", valor:262.57, forma:"Fatura dia 01, venc. dia 11 do mês seguinte"},
+     valorFinal:2595.38, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JUNHO", dataCompra:"19/06/2026", solicitacao:"Aéreo e hospedagem SP → Brasília",
+     viajante:"Daniele Lopes", pax:{}, dataViagem:"Ida 01/07 · Volta 03/07",
+     aereo:{tem:"Sim", trecho:"SP ⇄ Brasília (ida bem cedo, volta fim do dia)", valor:1240.09, fee:38, forma:"Master 3x"},
+     hospedagem:{tem:"Sim", detalhe:"Preferência hotel na Asa Norte", valor:627.30, forma:"Fatura dia 01, venc. dia 11 do mês seguinte"},
+     valorFinal:1905.39, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JUNHO", dataCompra:"19/06/2026", solicitacao:"Aéreo e hospedagem Recife → Brasília",
+     viajante:"Andre Sales", pax:{}, dataViagem:"Ida 01/07 · Volta 03/07",
+     aereo:{tem:"Sim", trecho:"Recife ⇄ Brasília (ida cedo, volta à noite — preferência Azul)", valor:2968.39, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Sim", detalhe:"Quarto com cama casal, se possível com academia", valor:627.30, forma:"Fatura dia 01, venc. dia 11 do mês seguinte"},
+     valorFinal:3614.69, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JUNHO", dataCompra:"22/06/2026", solicitacao:"Aéreo",
+     viajante:"Alexandre Magno Macario Nunes Soares", pax:{}, dataViagem:"Ida e volta 30/06",
+     aereo:{tem:"Sim", trecho:"Recife ⇄ Fortaleza", valor:1515.20, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Não", detalhe:"", valor:0, forma:""},
+     valorFinal:1534.20, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JUNHO", dataCompra:"22/06/2026", solicitacao:"Aéreo e hospedagem",
+     viajante:"Alexandre Magno Macario Nunes Soares", pax:{}, dataViagem:"Ida e volta 02/07",
+     aereo:{tem:"Sim", trecho:"Fortaleza ⇄ Recife", valor:2385.20, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Sim", detalhe:"Ecco Fortaleza — 1 diária", valor:255.75, forma:"Fatura dia 01, venc. dia 11 do mês seguinte"},
+     valorFinal:2659.95, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JUNHO", dataCompra:"22/06/2026", solicitacao:"Aéreo e hospedagem",
+     viajante:"Alice Moraes", pax:{}, dataViagem:"Ida 30/06 · Volta 02/07",
+     aereo:{tem:"Sim", trecho:"Recife ⇄ Fortaleza", valor:1727.20, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Sim", detalhe:"Fortaleza", valor:612.80, forma:"Fatura dia 01, venc. dia 11 do mês seguinte"},
+     valorFinal:2359.00, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JUNHO", dataCompra:"24/06/2026", solicitacao:"Aéreo Dr. Edgar",
+     viajante:"Edgar", pax:{}, dataViagem:"Ida e volta 02/07",
+     aereo:{tem:"Sim", trecho:"Rio ⇄ Campinas", valor:2252.17, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Não", detalhe:"", valor:0, forma:"Taxa de emissão"},
+     valorFinal:2271.17, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JUNHO", dataCompra:"25/06/2026", solicitacao:"Solicitação da Dani para um especialista",
+     viajante:"Járede Pereira", pax:{cpf:"", nascimento:""}, dataViagem:"Ida 03/07 manhã · Volta 04/07 noite",
+     aereo:{tem:"Sim", trecho:"SP ⇄ Curitiba", valor:1460.40, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Sim", detalhe:"Guarapuava", valor:255.00, forma:"Faturado — fatura 01/07, venc. 11/07"},
+     valorFinal:1734.40, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JUNHO", dataCompra:"26/06/2026", solicitacao:"Aéreo e hospedagem",
+     viajante:"Iury Hudson Correia de Lacerda", pax:{}, dataViagem:"Ida 30/06 · Volta 08/07",
+     aereo:{tem:"Sim", trecho:"Recife ⇄ Frankfurt", valor:6463.23, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Sim", detalhe:"Hotel Frankfurt (30/06→02/07 manhã) + Novotel Karlsruhe (02/07→04/07)", valor:2949.00, forma:"Reservado direto na Booking"},
+     valorFinal:9431.23, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JUNHO", dataCompra:"29/06/2026", solicitacao:"Aéreo e hospedagem (Chile → SP)",
+     viajante:"Stephanie Venus", pax:{}, dataViagem:"Ida 01/07 · Volta 02/07 — Santiago ⇄ GRU",
+     aereo:{tem:"Sim", trecho:"Chile ⇄ GRU", valor:2314.72, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Sim", detalhe:"Jundiaí", valor:1125.98, forma:"Faturado — fatura dia 01, venc. dia 11 de julho"},
+     valorFinal:3459.70, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JUNHO", dataCompra:"30/06/2026", solicitacao:"Dr. Marcio — RJ para São José (hospedagem Cassino Hotel)",
+     viajante:"Marcio Montinegro", pax:{}, dataViagem:"",
+     aereo:{tem:"Sim", trecho:"Rio ⇄ Araçatuba", valor:3367.01, fee:38, forma:"PIX TDM Medical"},
+     hospedagem:{tem:"Sim", detalhe:"São José", valor:583.12, forma:"PIX TDM Medical"},
+     valorFinal:3988.13, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JUNHO", dataCompra:"30/06/2026", solicitacao:"Alice — Maceió para São José",
+     viajante:"Alice Souza de Moraes Maciel", pax:{}, dataViagem:"",
+     aereo:{tem:"Sim", trecho:"Maceió ⇄ Araçatuba", valor:3276.63, fee:38, forma:""},
+     hospedagem:{tem:"Sim", detalhe:"São José", valor:0, forma:""},
+     valorFinal:3314.63, obs:"Custo de hospedagem em São José possivelmente consolidado no registro do Dr. Marcio Montinegro.", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"06/07/2026", solicitacao:"SP - Salvador",
+     viajante:"Alice Moraes", pax:{}, dataViagem:"",
+     aereo:{tem:"Sim", trecho:"SP ⇄ Salvador / Salvador ⇄ Maceió", valor:3013.93, fee:38, forma:"Master 3x"},
+     hospedagem:{tem:"Sim", detalhe:"Salvador", valor:320.39, forma:""},
+     valorFinal:3372.32, obs:"Valor final calculado a partir dos componentes (não constava explicitamente na planilha).",
+     pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"07/07/2026", solicitacao:"Hospedagem 07/07 até 08/07 + aéreo dia 08",
+     viajante:"Marcio Montinegro", pax:{}, dataViagem:"",
+     aereo:{tem:"Sim", trecho:"Congonhas ⇄ Rio de Janeiro", valor:3694.37, fee:38, forma:"Master 3x"},
+     hospedagem:{tem:"Sim", detalhe:"Intercity", valor:1047.61, forma:"Faturado — fatura 11/07, venc. 21/07"},
+     valorFinal:4779.98, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"07/07/2026", solicitacao:"Aéreo e hospedagem 23/07",
+     viajante:"Rodrigo da Silva Cardoso", pax:{}, dataViagem:"",
+     aereo:{tem:"Sim", trecho:"SP ⇄ RJ", valor:1440.08, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Sim", detalhe:"Preferência Ibis Botafogo", valor:423.93, forma:"Faturado — fatura 11/07, venc. 21/07"},
+     valorFinal:1883.01, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"08/07/2026", solicitacao:"Rodrigo BH",
+     viajante:"Rodrigo da Silva Cardoso", pax:{}, dataViagem:"",
+     aereo:{tem:"Sim", trecho:"Congonhas (SP) ⇄ BH", valor:681.90, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Sim", detalhe:"Preferência Savassi Ibis Budget", valor:360.72, forma:"Faturado — fatura 11/07, venc. 21/07"},
+     valorFinal:1061.62, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"12/07/2026", solicitacao:"Hospedagem 13/07 e 14/07",
+     viajante:"Jarede Pereira", pax:{}, dataViagem:"",
+     aereo:{tem:"Não", trecho:"", valor:0, fee:0, forma:""},
+     hospedagem:{tem:"Sim", detalhe:"Cassino Hotel", valor:322.44, forma:"Faturado — fatura 11/07, venc. 21/07"},
+     valorFinal:322.44, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"13/07/2026", solicitacao:"Hospedagem 14/07 e 15/07",
+     viajante:"Marcio Montinegro", pax:{}, dataViagem:"",
+     aereo:{tem:"Não", trecho:"", valor:0, fee:0, forma:""},
+     hospedagem:{tem:"Sim", detalhe:"", valor:428.79, forma:"Faturado — fatura 11/07, venc. 21/07"},
+     valorFinal:428.79, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"15/07/2026", solicitacao:"Aéreo Dr. Juliana",
+     viajante:"Juliana Rodrigues Neves", pax:{}, dataViagem:"",
+     aereo:{tem:"Sim", trecho:"Recife ⇄ SP", valor:1575.49, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Não", detalhe:"", valor:0, forma:""},
+     valorFinal:1594.49, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"16/07/2026", solicitacao:"Voo e hospedagem Maceió–Jundiaí (20/07 e 21/07)",
+     viajante:"Alice Moraes", pax:{}, dataViagem:"",
+     aereo:{tem:"Sim", trecho:"Maceió ⇄ SP", valor:3163.83, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Sim", detalhe:"", valor:335.43, forma:"Emissões 11–20/07 — fatura 21/07, venc. 01/08"},
+     valorFinal:3518.26, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"16/07/2026", solicitacao:"Aéreo SP (Campinas)–RJ, domingo dia 26 final da tarde, volta dia 28 após 15h + hospedagem Novotel Parque Olímpico (26 a 28)",
+     viajante:"Jarede Pereira", pax:{cpf:"", nascimento:"", email:""}, dataViagem:"",
+     aereo:{tem:"Sim", trecho:"SP (Campinas) ⇄ RJ", valor:2766.75, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Sim", detalhe:"Novotel Parque Olímpico", valor:1466.19, forma:"Emissões 11–20/07 — fatura 21/07, venc. 01/08"},
+     valorFinal:4251.94, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"17/07/2026", solicitacao:"Voo RJ–Jundiaí 21/07",
+     viajante:"Marcio Montinegro", pax:{}, dataViagem:"",
+     aereo:{tem:"Sim", trecho:"RJ ⇄ SP", valor:5213.09, fee:38, forma:"Master 3x"},
+     hospedagem:{tem:"Não", detalhe:"", valor:0, forma:""},
+     valorFinal:5251.09, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"18/07/2026", solicitacao:"Aéreo ida SOLACI e treinamento Rio — 24/07 Maceió→Rio (manhã), 28/07 Rio→SP (noite). Hospedagem junto com Dani Delfina (valor na linha dela).",
+     viajante:"Alice Moraes", pax:{nome:"Alice Souza de Moraes Maciel", email:"", nascimento:"", cpf:""}, dataViagem:"",
+     aereo:{tem:"Sim", trecho:"Maceió → Rio → SP", valor:2814.34, fee:57, forma:"Master 3x"},
+     hospedagem:{tem:"Não", detalhe:"", valor:0, forma:""},
+     valorFinal:2871.34, obs:"Hospedagem conjunta com Dani Delfina — valor lançado no registro dela.", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"18/07/2026", solicitacao:"Aéreo volta SOLACI — 31/07 SP→Maceió, fim da tarde ou noite",
+     viajante:"Alice Moraes", pax:{nome:"Alice Souza de Moraes Maciel", email:"", nascimento:"", cpf:""}, dataViagem:"",
+     aereo:{tem:"Sim", trecho:"SP ⇄ Maceió", valor:461.53, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Não", detalhe:"", valor:0, forma:""},
+     valorFinal:480.53, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"20/07/2026", solicitacao:"Aéreo e hospedagem Rio 26 a 28 (LATAM, preferência Congonhas 1º voo) — Hotel Ariane",
+     viajante:"Ariane Sanchez Nunes Salles", pax:{cpf:"", email:"", nascimento:""}, dataViagem:"",
+     aereo:{tem:"Sim", trecho:"SP ⇄ RJ", valor:1917.83, fee:38, forma:"Master 3x"},
+     hospedagem:{tem:"Sim", detalhe:"", valor:403.87, forma:"Emissões 11–20/07 — fatura 21/07, venc. 01/08"},
+     valorFinal:2359.70, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"20/07/2026", solicitacao:"Aéreo e hospedagem Rio 26 a 28 — Hotel Dr. Leonardo",
+     viajante:"Leonardo Giglio Dragone", pax:{cpf:"", email:"", nascimento:""}, dataViagem:"",
+     aereo:{tem:"Sim", trecho:"SP ⇄ RJ", valor:1917.83, fee:38, forma:"Master 3x"},
+     hospedagem:{tem:"Sim", detalhe:"", valor:403.87, forma:"Emissões 11–20/07 — fatura 21/07, venc. 01/08"},
+     valorFinal:2359.70, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"21/07/2026", solicitacao:"Aéreo e hospedagem Rio 26 a 28 — Hotel Dr. Bruno",
+     viajante:"Bruno Silva Ribeiro", pax:{cpf:"", email:"", nascimento:""}, dataViagem:"",
+     aereo:{tem:"Sim", trecho:"SP ⇄ RJ", valor:2416.59, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Sim", detalhe:"", valor:390.28, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
+     valorFinal:2825.87, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Aéreo Recife - Rio",
+     viajante:"Dani Delfina", pax:{nome:"Daniela Delfina dos Santos Souza", cpf:"", nascimento:"", email:""}, dataViagem:"",
+     aereo:{tem:"Sim", trecho:"Recife ⇄ Rio", valor:1435.02, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Não", detalhe:"", valor:0, forma:""},
+     valorFinal:1454.02, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"21/07/2026", solicitacao:"Hospedagem Rio 26 a 28 (Dani Delfina + Alice)",
+     viajante:"Dani Delfina", pax:{nome:"Daniela Delfina dos Santos Souza", cpf:"", nascimento:"", email:""}, dataViagem:"",
+     aereo:{tem:"Não", trecho:"", valor:0, fee:0, forma:""},
+     hospedagem:{tem:"Sim", detalhe:"", valor:1047.08, forma:"Faturado — emissões 21–30/31, fatura 01/09, venc. 11/08"},
+     valorFinal:1047.08, obs:"Quarto dividido com Alice Moraes.", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Aéreo Rio - SP",
+     viajante:"Dani Delfina", pax:{nome:"Daniela Delfina dos Santos Souza", cpf:"", nascimento:"", email:""}, dataViagem:"",
+     aereo:{tem:"Sim", trecho:"Rio ⇄ SP", valor:2932.91, fee:19, forma:"Faturado — emissões 21–30/31, fatura 01/09, venc. 11/08"},
+     hospedagem:{tem:"Não", detalhe:"", valor:0, forma:""},
+     valorFinal:2951.91, obs:"A planilha também menciona um trecho SP→Recife em 31/07 (precisa ser cedo) na mesma solicitação, sem valor discriminado.", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Hospedagem SP SOLACI 28 a 31 (quarto dividido com Alice)",
+     viajante:"Dani Delfina", pax:{nome:"Daniela Delfina dos Santos Souza", cpf:"", nascimento:"", email:""}, dataViagem:"",
+     aereo:{tem:"Não", trecho:"", valor:0, fee:0, forma:""},
+     hospedagem:{tem:"Sim", detalhe:"", valor:1602.92, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
+     valorFinal:1602.92, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Hospedagem SP SOLACI 29 a 30 (quarto dividido com Jarede)",
+     viajante:"Daniele Lopes", pax:{nome:"Daniele Caroline Lopes", cpf:"", nascimento:"", email:""}, dataViagem:"",
+     aereo:{tem:"Não", trecho:"", valor:0, fee:0, forma:""},
+     hospedagem:{tem:"Sim", detalhe:"", valor:1150.43, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
+     valorFinal:1150.43, obs:"Quarto dividido com Jarede Pereira.", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Aéreo e hospedagem SOLACI (vem de Recife)",
+     viajante:"Thyally Rayssa", pax:{nome:"Thyally Rayssa Ribeiro da Silva", cpf:"", nascimento:"", email:""}, dataViagem:"",
+     aereo:{tem:"Sim", trecho:"Recife ⇄ SP", valor:1350.46, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Sim", detalhe:"", valor:1602.92, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
+     valorFinal:2972.38, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Aéreo e hospedagem SOLACI SBCHI (quarto dividido entre os 2)",
+     viajante:"Andre Sales", pax:{nome:"Andre Luiz Cavalcanti Dias Sales", cpf:"", nascimento:"", email:""}, dataViagem:"",
+     aereo:{tem:"Sim", trecho:"Recife ⇄ SP", valor:1350.46, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Sim", detalhe:"", valor:1602.92, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
+     valorFinal:2972.38, obs:"A planilha soma R$ 4.341,84 nesta linha, aparentemente somando também o trecho aéreo do Erick Vieira (quarto dividido entre os dois). Valor aqui reflete apenas os itens do André — conferir fatura.", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Aéreo SOLACI SBCHI (quarto dividido com André)",
+     viajante:"Erick Vieira", pax:{nome:"Erick Gomes Vieira de Melo", cpf:"", nascimento:"", email:""}, dataViagem:"",
+     aereo:{tem:"Sim", trecho:"Recife ⇄ SP", valor:1350.46, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Sim (custo lançado no registro de André Sales)", detalhe:"", valor:0, forma:""},
+     valorFinal:1369.46, obs:"Hospedagem compartilhada com André Sales — custo lançado na linha dele.", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Aéreo e hospedagem SOLACI SBCHI (Eudes e Luciano, mesmo voo, preferência Congonhas, mesmo quarto)",
+     viajante:"Eudes Figueredo", pax:{nome:"Eudes Santos de Figueredo", cpf:"", nascimento:"", email:""}, dataViagem:"",
+     aereo:{tem:"Sim", trecho:"Recife ⇄ SP", valor:1350.46, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Sim", detalhe:"", valor:1602.92, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
+     valorFinal:2972.38, obs:"A planilha soma R$ 6.063,10 nesta linha, aparentemente somando também o trecho aéreo do Luciano Neves (quarto dividido entre os dois). Valor aqui reflete apenas os itens do Eudes — conferir fatura.", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Aéreo SOLACI SBCHI (mesmo quarto que Eudes)",
+     viajante:"Luciano Neves", pax:{nome:"Luciano Alves das Neves", cpf:"", nascimento:"", email:""}, dataViagem:"",
+     aereo:{tem:"Sim", trecho:"Recife ⇄ SP", valor:3071.72, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Sim (custo lançado no registro de Eudes Figueredo)", detalhe:"", valor:0, forma:""},
+     valorFinal:3090.72, obs:"Hospedagem compartilhada com Eudes Figueredo — custo lançado na linha dele.", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"BH - SP SOLACI SBCHI",
+     viajante:"Valdiene Carvalho", pax:{cpf:"", nascimento:"", email:""}, dataViagem:"",
+     aereo:{tem:"Sim", trecho:"BH ⇄ SP", valor:1290.10, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Sim", detalhe:"", valor:1602.00, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
+     valorFinal:2911.10, obs:"A planilha soma R$ 5.152,39 nesta linha, aparentemente somando também o trecho aéreo da Elaine Moya. Valor aqui reflete apenas os itens da Valdiene — conferir fatura.", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"RJ - SP SOLACI SBCHI",
+     viajante:"Elaine Moya", pax:{nome:"Elaine Cristina Saldanha Moya", cpf:"", nascimento:"", email:""}, dataViagem:"",
+     aereo:{tem:"Sim", trecho:"RJ ⇄ SP", valor:1847.29, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Não informado nesta linha", detalhe:"", valor:0, forma:""},
+     valorFinal:1866.29, obs:"Hospedagem não discriminada nesta linha; a planilha soma R$ 5.153,31 junto com a linha da Valdiene Carvalho.", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Hotel próximo ao Congresso SOLACI (check-in 30/07, check-out 31/07)",
+     viajante:"Micheli Aparecida dos Santos", pax:{cpf:"", rg:"", nascimento:""}, dataViagem:"",
+     aereo:{tem:"Não", trecho:"", valor:0, fee:0, forma:""},
+     hospedagem:{tem:"Sim", detalhe:"", valor:558.71, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
+     valorFinal:558.71, obs:"Quarto dividido com Natasha Fonseca Moura Cavalcanti.", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"21/07/2026", solicitacao:"Aéreo ida — Guarulhos para Rondônia",
+     viajante:"Ana Paula Ferreira da Silva", pax:{cpf:"", nascimento:"", email:""}, dataViagem:"31/07",
+     aereo:{tem:"Sim", trecho:"SP ⇄ Rondônia", valor:1524.76, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Não", detalhe:"", valor:0, forma:""},
+     valorFinal:1543.76, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Aéreo ida e volta (Fortaleza–Rio) + hospedagem Rio",
+     viajante:"Daniel Francisco de Mendonça Trompieri", pax:{}, dataViagem:"",
+     aereo:{tem:"Sim", trecho:"Fortaleza ⇄ Rio", valor:5233.44, fee:38, forma:"Master 3x"},
+     hospedagem:{tem:"Sim", detalhe:"", valor:1027.79, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
+     valorFinal:6299.23, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"30/07/2026", solicitacao:"Congresso Mundial de Cardiologia no Rio de Janeiro — Riocentro, Barra Olímpica. Ida quarta-feira manhã cedo (7/10), volta sábado à noite (10/10). Dois quartos de hotel.",
+     viajante:"Nelson Fernando Eugênio Hurtado", pax:{cpf:"", nascimento:""}, dataViagem:"Ida 7/10 · Volta 10/10",
+     aereo:{tem:"Sim", trecho:"Recife ⇄ RJ", valor:1744.25, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Sim", detalhe:"", valor:755.64, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
+     valorFinal:2518.89, obs:"Viagem em grupo (4 pessoas) para o Congresso Mundial de Cardiologia.", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"30/07/2026", solicitacao:"Congresso Mundial de Cardiologia no Rio de Janeiro — mesma viagem do grupo (ver registro de Nelson Hurtado)",
+     viajante:"Ariana Nicol Eugênio Vela", pax:{cpf:"", nascimento:""}, dataViagem:"Ida 7/10 · Volta 10/10",
+     aereo:{tem:"Sim", trecho:"Recife ⇄ RJ", valor:1744.25, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Sim", detalhe:"", valor:755.64, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
+     valorFinal:2518.89, obs:"Viagem em grupo (4 pessoas) para o Congresso Mundial de Cardiologia.", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"30/07/2026", solicitacao:"Congresso Mundial de Cardiologia no Rio de Janeiro — mesma viagem do grupo (ver registro de Nelson Hurtado)",
+     viajante:"Miguel Angel Eugênio Vela", pax:{cpf:"", nascimento:""}, dataViagem:"Ida 7/10 · Volta 10/10",
+     aereo:{tem:"Sim", trecho:"Recife ⇄ RJ", valor:1744.25, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Sim", detalhe:"", valor:755.64, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
+     valorFinal:2518.89, obs:"Viagem em grupo (4 pessoas) para o Congresso Mundial de Cardiologia.", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"JULHO", dataCompra:"30/07/2026", solicitacao:"Congresso Mundial de Cardiologia no Rio de Janeiro — mesma viagem do grupo (ver registro de Nelson Hurtado)",
+     viajante:"Christian Augusto Montesinos Calleja", pax:{cpf:"", nascimento:""}, dataViagem:"Ida 7/10 · Volta 10/10",
+     aereo:{tem:"Sim", trecho:"Recife ⇄ RJ", valor:1744.25, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Sim", detalhe:"", valor:755.64, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
+     valorFinal:2518.89, obs:"Viagem em grupo (4 pessoas) para o Congresso Mundial de Cardiologia.", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"AGOSTO", dataCompra:"04/08/2026", solicitacao:"SP (GRU) - Recife. Ida 10/08/26 (7h), volta 13/08/26 (17h). Hotel próximo ao escritório da Sellmed.",
+     viajante:"Gislene Brito de Souza", pax:{cpf:"", nascimento:"", email:"", telefone:""}, dataViagem:"Ida 10/08 · Volta 13/08",
+     aereo:{tem:"Sim", trecho:"SP (GRU) ⇄ Recife", valor:3438.75, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Sim", detalhe:"Próximo ao escritório da Sellmed", valor:1041.70, forma:"Faturado — emissões 1–10, fatura dia 11, venc. dia 21"},
+     valorFinal:4499.45, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"AGOSTO", dataCompra:"06/08/2026", solicitacao:"Hotel em Ribeirão Preto",
+     viajante:"Jarede Pereira", pax:{cpf:"", nascimento:"", email:""}, dataViagem:"",
+     aereo:{tem:"Não", trecho:"", valor:0, fee:0, forma:""},
+     hospedagem:{tem:"Sim", detalhe:"", valor:283.80, forma:"Faturado — emissões 1–10, fatura dia 11, venc. dia 21"},
+     valorFinal:283.80, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"AGOSTO", dataCompra:"06/08/2026", solicitacao:"Recife - Fortaleza. Ida 11/08 à tarde, volta 14/08 após o almoço. Hotel 11 a 14/08.",
+     viajante:"Luciano Neves", pax:{nome:"Luciano Alves das Neves", cpf:"", nascimento:"", email:""}, dataViagem:"Ida 11/08 · Volta 14/08",
+     aereo:{tem:"Sim", trecho:"Recife ⇄ Fortaleza", valor:2128.42, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Sim", detalhe:"", valor:673.11, forma:"Faturado — emissões 1–10, fatura dia 11, venc. dia 21"},
+     valorFinal:2820.53, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"AGOSTO", dataCompra:"06/08/2026", solicitacao:"Recife - Fortaleza. Ida 11/08 à tarde, volta 14/08 após o almoço. Hotel 11 a 14/08.",
+     viajante:"Eudes Figueredo", pax:{nome:"Eudes Santos de Figueredo", cpf:"", nascimento:"", email:""}, dataViagem:"Ida 11/08 · Volta 14/08",
+     aereo:{tem:"Sim", trecho:"Recife ⇄ Fortaleza", valor:2128.42, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Sim", detalhe:"", valor:673.11, forma:"Faturado — emissões 1–10, fatura dia 11, venc. dia 21"},
+     valorFinal:2820.53, obs:"", pagamentoFaturaFeito:false},
+
+    {status:"ok", mes:"AGOSTO", dataCompra:"06/08/2026", solicitacao:"Maceió - Fortaleza. Somente ida 10/08, hotel 10/08 a 11/08 em Ribeirão.",
+     viajante:"Alice Moraes", pax:{nome:"Alice Souza de Moraes Maciel", email:"", nascimento:"", cpf:""}, dataViagem:"10/08",
+     aereo:{tem:"Sim", trecho:"Maceió ⇄ Ribeirão Preto", valor:2943.72, fee:19, forma:"Master 3x"},
+     hospedagem:{tem:"Sim", detalhe:"Ribeirão Preto", valor:283.80, forma:"Faturado — emissões 1–10, fatura dia 11, venc. dia 21"},
+     valorFinal:3246.52, obs:"", pagamentoFaturaFeito:false}
+  ];
+
+
+  function seedWithIds(){
+    return SEED_DATA.map(function(t){ t = JSON.parse(JSON.stringify(t)); t.id = uid(); return t; });
+  }
+
+  // ---------------------------------------------------------------
+  // Persistência
+  // ---------------------------------------------------------------
+  function load(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(raw) return JSON.parse(raw);
+    }catch(e){}
+    var seeded = seedWithIds();
+    save(seeded);
+    return seeded;
+  }
+  function save(list){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }catch(e){}
+  }
+
+  var trips = load();
+  var state = { search:"", status:"todos", mes:"todos", aereo:"todos" };
+
+  // ---------------------------------------------------------------
+  // Helpers
+  // ---------------------------------------------------------------
+  function parseData(d){
+    if(!d) return 0;
+    var m = d.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+    if(!m) return 0;
+    return new Date(+m[3], +m[2]-1, +m[1]).getTime();
+  }
+  function isPend(t){ return t.status === "pend"; }
+  function hasAereo(t){ return !!(t.aereo && t.aereo.tem && t.aereo.tem.toLowerCase().indexOf("não") !== 0); }
+  function statusLabel(t){ return t.statusDetalhe || (isPend(t) ? "Aguardando" : "OK"); }
+
+  function monthOptions(){
+    var set = {};
+    trips.forEach(function(t){ if(t.mes) set[t.mes] = true; });
+    return Object.keys(set);
+  }
+
+  function filtered(){
+    var q = state.search.trim().toLowerCase();
+    return trips.filter(function(t){
+      if(state.status !== "todos" && t.status !== state.status) return false;
+      if(state.mes !== "todos" && t.mes !== state.mes) return false;
+      if(state.aereo === "com" && !hasAereo(t)) return false;
+      if(state.aereo === "sem" && hasAereo(t)) return false;
+      if(q){
+        var hay = [t.viajante, t.solicitacao, t.aereo && t.aereo.trecho, t.dataViagem]
+          .filter(Boolean).join(" ").toLowerCase();
+        if(hay.indexOf(q) === -1) return false;
+      }
+      return true;
+    }).sort(function(a,b){ return parseData(b.dataCompra) - parseData(a.dataCompra); });
+  }
+
+  // ---------------------------------------------------------------
+  // Render KPIs
+  // ---------------------------------------------------------------
+  function renderKpis(){
+    var list = filtered();
+    var total = list.length;
+    var pend = list.filter(isPend).length;
+    var somaFinal = list.reduce(function(s,t){ return s + (Number(t.valorFinal)||0); }, 0);
+    var somaAereo = list.reduce(function(s,t){ return s + (Number(t.aereo && t.aereo.valor)||0) + (Number(t.aereo && t.aereo.fee)||0); }, 0);
+    var somaHosp = list.reduce(function(s,t){ return s + (Number(t.hospedagem && t.hospedagem.valor)||0); }, 0);
+    // "Pago no Master 3x" = valor da passagem de todos os aéreos, sem o fee
+    // (o fee entra inteiro no "Pago faturado", nunca aqui).
+    var somaMaster = list.reduce(function(s,t){
+      return s + (Number(t.aereo && t.aereo.valor) || 0);
+    }, 0);
+    // "Pago faturado" = toda a hospedagem + somente o fee do aéreo
+    // (o valor da passagem em si nunca entra aqui, mesmo se a forma de
+    // pagamento do aéreo mencionar "faturado").
+    var somaFaturado = list.reduce(function(s,t){
+      var fee = Number(t.aereo && t.aereo.fee) || 0;
+      var hospValor = Number(t.hospedagem && t.hospedagem.valor) || 0;
+      return s + fee + hospValor;
+    }, 0);
+
+    document.getElementById("kpis").innerHTML =
+      '<div class="kpi"><div class="label">Viagens no período</div><div class="value tabular">'+ total +'</div><div class="hint">'+ pend +' pendente(s)</div></div>' +
+      '<div class="kpi"><div class="label">Total investido</div><div class="value tabular">'+ money(somaFinal) +'</div><div class="hint">aéreo + hospedagem + taxas</div></div>' +
+      '<div class="kpi"><div class="label">Aéreo (com fee)</div><div class="value teal tabular">'+ money(somaAereo) +'</div></div>' +
+      '<div class="kpi"><div class="label">Hospedagem</div><div class="value teal tabular">'+ money(somaHosp) +'</div></div>' +
+      '<div class="kpi"><div class="label">Pago no Master 3x</div><div class="value teal tabular">'+ money(somaMaster) +'</div><div class="hint">valor das passagens (sem fee)</div></div>' +
+      '<div class="kpi"><div class="label">Pago faturado</div><div class="value teal tabular">'+ money(somaFaturado) +'</div><div class="hint">hospedagem + fee de agência</div></div>' +
+      '<div class="kpi"><div class="label">Pendências</div><div class="value amber tabular">'+ pend +'</div><div class="hint">aguardando confirmação</div></div>';
+  }
+
+  // ---------------------------------------------------------------
+  // Render tabela
+  // ---------------------------------------------------------------
+  function esc(s){ return (s==null?"":String(s)).replace(/[&<>]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c]; }); }
+
+  function renderTable(){
+    var list = filtered();
+    var tbody = document.getElementById("tbody");
+    var empty = document.getElementById("emptyState");
+    if(list.length === 0){
+      tbody.innerHTML = "";
+      empty.style.display = "block";
+      return;
+    }
+    empty.style.display = "none";
+    tbody.innerHTML = list.map(function(t){
+      var pill = isPend(t)
+        ? '<span class="pill pend">'+ esc(statusLabel(t)) +'</span>'
+        : '<span class="pill ok">OK</span>';
+      var aereoHasInfo = t.aereo && t.aereo.tem && t.aereo.tem.toLowerCase().indexOf("não") !== 0 && t.aereo.tem !== "Não";
+      var aereoValueTxt = (t.aereo && (t.aereo.valor || t.aereo.fee))
+        ? money(t.aereo.valor) + (t.aereo.fee? ' <span class="muted">(+'+money(t.aereo.fee)+' fee)</span>':'')
+        : '<span class="muted" style="font-weight:600;">A cotar</span>';
+      var aereoTxt = aereoHasInfo
+        ? '<div class="route">'+ esc(t.aereo.trecho || t.aereo.tem) +'</div><div class="money tabular">'+ aereoValueTxt +'</div>'
+        : '<span class="muted">—</span>';
+      var hospHasInfo = t.hospedagem && t.hospedagem.tem && t.hospedagem.tem.toLowerCase().indexOf("não") === 0 ? false : (t.hospedagem && t.hospedagem.tem);
+      var hospValueTxt = (t.hospedagem && t.hospedagem.valor)
+        ? money(t.hospedagem.valor)
+        : '<span class="muted" style="font-weight:600;">A cotar</span>';
+      var hospTxt = hospHasInfo
+        ? '<div>'+ esc(t.hospedagem.detalhe || "Sim") +'</div><div class="money tabular">'+ hospValueTxt +'</div>'
+        : '<span class="muted">—</span>';
+      return '<tr data-id="'+ t.id +'">' +
+        '<td>'+ pill +'</td>' +
+        '<td><div class="via-name">'+ esc(t.viajante) +'</div><div class="sol-text">'+ esc(t.solicitacao) +'</div></td>' +
+        '<td>'+ esc(t.dataViagem) +'<div class="sol-text tabular">Solicitado '+ esc(t.dataCompra) +' · '+ esc(t.mes) +'</div></td>' +
+        '<td>'+ aereoTxt +'</td>' +
+        '<td>'+ hospTxt +'</td>' +
+        '<td class="money tabular">'+ money(t.valorFinal) + (t.obs ? ' <span title="'+esc(t.obs)+'" style="cursor:help;color:var(--amber);">⚑</span>' : '') +'</td>' +
+        '<td class="sol-text">'+ esc(t.hospedagem && t.hospedagem.forma || t.aereo && t.aereo.forma || "") +'</td>' +
+        '<td style="text-align:center;"><input type="checkbox" class="pago-check" data-act="pago" style="width:18px;height:18px;cursor:pointer;accent-color:var(--green);"'+ (t.pagamentoFaturaFeito? " checked":"") +' title="Pagamento da fatura referente feito"></td>' +
+        '<td><div class="row-actions">' +
+          '<button class="btn btn-sm btn-icon" data-act="view" title="Detalhes">👁</button>' +
+          '<button class="btn btn-sm btn-icon" data-act="edit" title="Editar">✎</button>' +
+          '<button class="btn btn-sm btn-icon btn-danger" data-act="del" title="Excluir">🗑</button>' +
+        '</div></td>' +
+      '</tr>';
+    }).join("");
+  }
+
+  function renderMesFilter(){
+    var sel = document.getElementById("mesFilter");
+    var opts = monthOptions();
+    sel.innerHTML = '<option value="todos">Todos os meses</option>' +
+      opts.map(function(m){ return '<option value="'+esc(m)+'">'+esc(m)+'</option>'; }).join("");
+    sel.value = state.mes;
+  }
+
+  function renderAll(){
+    renderKpis();
+    renderMesFilter();
+    renderTable();
+  }
+
+  // ---------------------------------------------------------------
+  // Modal: detalhes
+  // ---------------------------------------------------------------
+  function openDetail(t){
+    var pax = t.pax || {};
+    var hasPax = pax.cpf || pax.email || pax.nascimento || pax.rg || pax.nome || pax.telefone;
+    var root = document.getElementById("modalRoot");
+    root.innerHTML =
+      '<div class="backdrop" id="bd">' +
+        '<div class="modal">' +
+          '<header><h2>'+ esc(t.viajante) +'</h2><button class="btn btn-icon btn-ghost" data-close>✕</button></header>' +
+          '<div class="body">' +
+            '<div class="detail-row"><span class="k">Status</span><span class="v">'+ esc(statusLabel(t)) +'</span></div>' +
+            '<div class="detail-row"><span class="k">Solicitação</span><span class="v">'+ esc(t.solicitacao) +'</span></div>' +
+            '<div class="detail-row"><span class="k">Data da solicitação</span><span class="v">'+ esc(t.dataCompra) +' ('+ esc(t.mes) +')</span></div>' +
+            '<div class="detail-row"><span class="k">Datas da viagem</span><span class="v">'+ esc(t.dataViagem) +'</span></div>' +
+            '<div class="detail-row"><span class="k">Aéreo</span><span class="v">'+ esc((t.aereo&&t.aereo.trecho) || (t.aereo&&t.aereo.tem) || "—") +'</span></div>' +
+            '<div class="detail-row"><span class="k">Valor aéreo</span><span class="v tabular">'+ money(t.aereo&&t.aereo.valor) +' (fee '+ money(t.aereo&&t.aereo.fee) +')</span></div>' +
+            '<div class="detail-row"><span class="k">Forma de pagamento (aéreo)</span><span class="v">'+ esc((t.aereo&&t.aereo.forma)||"—") +'</span></div>' +
+            '<div class="detail-row"><span class="k">Hospedagem</span><span class="v">'+ esc((t.hospedagem&&t.hospedagem.detalhe) || (t.hospedagem&&t.hospedagem.tem) || "—") +'</span></div>' +
+            '<div class="detail-row"><span class="k">Valor hospedagem</span><span class="v tabular">'+ money(t.hospedagem&&t.hospedagem.valor) +'</span></div>' +
+            '<div class="detail-row"><span class="k">Faturamento hospedagem</span><span class="v">'+ esc((t.hospedagem&&t.hospedagem.forma)||"—") +'</span></div>' +
+            '<div class="detail-row"><span class="k">Valor final da viagem</span><span class="v tabular" style="font-size:16px;color:var(--navy);">'+ money(t.valorFinal) +'</span></div>' +
+            (hasPax ? '<button class="toggle-pax" id="paxToggle">Mostrar dados do passageiro (CPF/e-mail/nascimento) <span>▾</span></button>' +
+              '<div class="pax-box" id="paxBox">' +
+                (pax.nome? '<div class="detail-row"><span class="k">Nome completo</span><span class="v">'+esc(pax.nome)+'</span></div>':'') +
+                (pax.cpf? '<div class="detail-row"><span class="k">CPF</span><span class="v tabular">'+esc(pax.cpf)+'</span></div>':'') +
+                (pax.rg? '<div class="detail-row"><span class="k">RG</span><span class="v tabular">'+esc(pax.rg)+'</span></div>':'') +
+                (pax.nascimento? '<div class="detail-row"><span class="k">Nascimento</span><span class="v tabular">'+esc(pax.nascimento)+'</span></div>':'') +
+                (pax.email? '<div class="detail-row"><span class="k">E-mail</span><span class="v">'+esc(pax.email)+'</span></div>':'') +
+                (pax.telefone? '<div class="detail-row"><span class="k">Celular</span><span class="v tabular">'+esc(pax.telefone)+'</span></div>':'') +
+              '</div>' : '') +
+            (t.formId ? '<div class="detail-row"><span class="k">Origem</span><span class="v">Formulário de solicitação</span></div>' : '') +
+            (t.obs ? '<div class="obs-box">⚑ '+ esc(t.obs) +'</div>' : '') +
+          '</div>' +
+          '<footer>' +
+            '<button class="btn btn-ghost" data-close>Fechar</button>' +
+            '<button class="btn btn-primary" id="editFromView">Editar</button>' +
+          '</footer>' +
+        '</div>' +
+      '</div>';
+    root.querySelector("#bd").addEventListener("click", function(e){ if(e.target.id === "bd") closeModal(); });
+    root.querySelectorAll("[data-close]").forEach(function(b){ b.addEventListener("click", closeModal); });
+    var toggle = root.querySelector("#paxToggle");
+    if(toggle){
+      toggle.addEventListener("click", function(){
+        root.querySelector("#paxBox").classList.toggle("show");
+      });
+    }
+    var editBtn = root.querySelector("#editFromView");
+    if(editBtn) editBtn.addEventListener("click", function(){ closeModal(); openForm(t); });
+  }
+
+  function closeModal(){ document.getElementById("modalRoot").innerHTML = ""; }
+
+  // ---------------------------------------------------------------
+  // Modal: formulário (criar/editar)
+  // ---------------------------------------------------------------
+  function openForm(existing){
+    var t = existing ? JSON.parse(JSON.stringify(existing)) : {
+      status:"ok", mes:"JULHO", dataCompra:"", solicitacao:"", viajante:"",
+      pax:{nome:"",cpf:"",nascimento:"",email:""}, dataViagem:"",
+      aereo:{tem:"Sim", trecho:"", valor:0, fee:19, forma:"Master 3x"},
+      hospedagem:{tem:"Não", detalhe:"", valor:0, forma:""},
+      valorFinal:0, obs:""
+    };
+    t.pax = t.pax || {};
+    t.aereo = t.aereo || {};
+    t.hospedagem = t.hospedagem || {};
+
+    var root = document.getElementById("modalRoot");
+    root.innerHTML =
+      '<div class="backdrop" id="bd">' +
+        '<div class="modal">' +
+          '<header><h2>'+ (existing ? "Editar viagem" : "Nova viagem") +'</h2><button class="btn btn-icon btn-ghost" data-close>✕</button></header>' +
+          '<form id="tripForm">' +
+          '<div class="body">' +
+
+            '<fieldset><legend>Solicitação</legend>' +
+              '<div class="field-grid">' +
+                '<div class="field"><label>Viajante</label><input name="viajante" required value="'+esc(t.viajante)+'"></div>' +
+                '<div class="field"><label>Status</label><select name="status">' +
+                  '<option value="ok"'+(t.status==="ok"?" selected":"")+'>OK</option>' +
+                  '<option value="pend"'+(t.status==="pend"?" selected":"")+'>Pendente</option>' +
+                '</select></div>' +
+                '<div class="field full"><label>Solicitação / observação da viagem</label><textarea name="solicitacao">'+esc(t.solicitacao)+'</textarea></div>' +
+                '<div class="field"><label>Mês da solicitação</label><input name="mes" value="'+esc(t.mes)+'" placeholder="JULHO"></div>' +
+                '<div class="field"><label>Data da solicitação/compra</label><input name="dataCompra" value="'+esc(t.dataCompra)+'" placeholder="DD/MM/AAAA"></div>' +
+                '<div class="field full"><label>Datas da viagem</label><input name="dataViagem" value="'+esc(t.dataViagem)+'" placeholder="Ida … · Volta …"></div>' +
+              '</div>' +
+            '</fieldset>' +
+
+            '<fieldset><legend>Aéreo</legend>' +
+              '<div class="field-grid">' +
+                '<div class="field"><label>Situação</label><input name="aereoTem" value="'+esc(t.aereo.tem)+'" placeholder="Sim / Não"></div>' +
+                '<div class="field"><label>Trecho</label><input name="aereoTrecho" value="'+esc(t.aereo.trecho)+'"></div>' +
+                '<div class="field"><label>Valor (R$)</label><input name="aereoValor" id="fldAereoValor" type="number" step="0.01" value="'+ (t.aereo.valor||0) +'"></div>' +
+                '<div class="field"><label>Fee agência (R$)</label><input name="aereoFee" id="fldAereoFee" type="number" step="0.01" value="'+ (t.aereo.fee||0) +'"></div>' +
+                '<div class="field full"><label>Forma de pagamento</label><input name="aereoForma" value="'+esc(t.aereo.forma)+'"></div>' +
+              '</div>' +
+            '</fieldset>' +
+
+            '<fieldset><legend>Hospedagem</legend>' +
+              '<div class="field-grid">' +
+                '<div class="field"><label>Situação</label><input name="hospTem" value="'+esc(t.hospedagem.tem)+'" placeholder="Sim / Não"></div>' +
+                '<div class="field"><label>Detalhe / local</label><input name="hospDetalhe" value="'+esc(t.hospedagem.detalhe)+'"></div>' +
+                '<div class="field"><label>Valor (R$)</label><input name="hospValor" id="fldHospValor" type="number" step="0.01" value="'+ (t.hospedagem.valor||0) +'"></div>' +
+                '<div class="field full"><label>Faturamento</label><input name="hospForma" value="'+esc(t.hospedagem.forma)+'"></div>' +
+              '</div>' +
+            '</fieldset>' +
+
+            '<fieldset><legend>Total &amp; observações</legend>' +
+              '<div class="field-grid">' +
+                '<div class="field"><label>Valor final da viagem (R$) — calculado automaticamente</label><input name="valorFinal" id="fldValorFinal" type="number" step="0.01" value="'+ (t.valorFinal||0) +'" readonly style="background:var(--surface);font-weight:700;color:var(--navy);cursor:not-allowed;"></div>' +
+                '<div class="field full"><label>Observações</label><textarea name="obs">'+esc(t.obs)+'</textarea></div>' +
+              '</div>' +
+            '</fieldset>' +
+
+            '<fieldset><legend>Dados do passageiro (opcional)</legend>' +
+              '<div class="field-grid">' +
+                '<div class="field"><label>Nome completo</label><input name="paxNome" value="'+esc(t.pax.nome)+'"></div>' +
+                '<div class="field"><label>CPF</label><input name="paxCpf" value="'+esc(t.pax.cpf)+'"></div>' +
+                '<div class="field"><label>Nascimento</label><input name="paxNasc" value="'+esc(t.pax.nascimento)+'" placeholder="DD/MM/AAAA"></div>' +
+                '<div class="field"><label>E-mail</label><input name="paxEmail" type="email" value="'+esc(t.pax.email)+'"></div>' +
+                '<div class="field"><label>Celular</label><input name="paxTelefone" value="'+esc(t.pax.telefone)+'"></div>' +
+              '</div>' +
+            '</fieldset>' +
+
+          '</div>' +
+          '<footer>' +
+            '<button type="button" class="btn btn-ghost" data-close>Cancelar</button>' +
+            '<button type="submit" class="btn btn-primary">'+ (existing ? "Salvar alterações" : "Adicionar viagem") +'</button>' +
+          '</footer>' +
+          '</form>' +
+        '</div>' +
+      '</div>';
+
+    root.querySelector("#bd").addEventListener("click", function(e){ if(e.target.id === "bd") closeModal(); });
+    root.querySelectorAll("[data-close]").forEach(function(b){ b.addEventListener("click", closeModal); });
+
+    var fldAereoValor = root.querySelector("#fldAereoValor");
+    var fldAereoFee = root.querySelector("#fldAereoFee");
+    var fldHospValor = root.querySelector("#fldHospValor");
+    var fldValorFinal = root.querySelector("#fldValorFinal");
+    function recomputeValorFinal(){
+      var soma = (parseFloat(fldAereoValor.value)||0) + (parseFloat(fldAereoFee.value)||0) + (parseFloat(fldHospValor.value)||0);
+      fldValorFinal.value = soma.toFixed(2);
+    }
+    [fldAereoValor, fldAereoFee, fldHospValor].forEach(function(el){
+      el.addEventListener("input", recomputeValorFinal);
+    });
+    recomputeValorFinal();
+
+    root.querySelector("#tripForm").addEventListener("submit", function(e){
+      e.preventDefault();
+      var f = new FormData(e.target);
+      var valorFinalCalc = (parseFloat(f.get("aereoValor"))||0) + (parseFloat(f.get("aereoFee"))||0) + (parseFloat(f.get("hospValor"))||0);
+      var rec = {
+        id: existing ? existing.id : uid(),
+        formId: existing ? existing.formId : undefined,
+        pagamentoFaturaFeito: existing ? !!existing.pagamentoFaturaFeito : false,
+        status: f.get("status"),
+        statusDetalhe: existing ? existing.statusDetalhe : "",
+        mes: (f.get("mes")||"").toUpperCase(),
+        dataCompra: f.get("dataCompra"),
+        solicitacao: f.get("solicitacao"),
+        viajante: f.get("viajante"),
+        dataViagem: f.get("dataViagem"),
+        pax:{
+          nome: f.get("paxNome"), cpf: f.get("paxCpf"),
+          nascimento: f.get("paxNasc"), email: f.get("paxEmail"),
+          telefone: f.get("paxTelefone")
+        },
+        aereo:{
+          tem: f.get("aereoTem"), trecho: f.get("aereoTrecho"),
+          valor: parseFloat(f.get("aereoValor"))||0, fee: parseFloat(f.get("aereoFee"))||0,
+          forma: f.get("aereoForma")
+        },
+        hospedagem:{
+          tem: f.get("hospTem"), detalhe: f.get("hospDetalhe"),
+          valor: parseFloat(f.get("hospValor"))||0, forma: f.get("hospForma")
+        },
+        valorFinal: valorFinalCalc,
+        obs: f.get("obs")
+      };
+      if(existing){
+        var idx = trips.findIndex(function(x){ return x.id === existing.id; });
+        trips[idx] = rec;
+      } else {
+        trips.push(rec);
+      }
+      save(trips);
+      closeModal();
+      renderAll();
+    });
+  }
+
+  // ---------------------------------------------------------------
+  // Eventos globais
+  // ---------------------------------------------------------------
+  document.getElementById("tbody").addEventListener("click", function(e){
+    var btn = e.target.closest("button[data-act]");
+    if(!btn) return;
+    var tr = e.target.closest("tr");
+    var id = tr.getAttribute("data-id");
+    var t = trips.find(function(x){ return x.id === id; });
+    if(!t) return;
+    if(btn.dataset.act === "view") openDetail(t);
+    if(btn.dataset.act === "edit") openForm(t);
+    if(btn.dataset.act === "del"){
+      if(confirm('Excluir a viagem de "'+t.viajante+'" ('+t.solicitacao+')? Essa ação não pode ser desfeita.')){
+        trips = trips.filter(function(x){ return x.id !== id; });
+        save(trips);
+        renderAll();
+      }
+    }
+  });
+
+  document.getElementById("tbody").addEventListener("change", function(e){
+    var box = e.target.closest('input[data-act="pago"]');
+    if(!box) return;
+    var tr = e.target.closest("tr");
+    var id = tr.getAttribute("data-id");
+    var t = trips.find(function(x){ return x.id === id; });
+    if(!t) return;
+    t.pagamentoFaturaFeito = box.checked;
+    save(trips);
+  });
+
+  document.getElementById("btnNew").addEventListener("click", function(){ openForm(null); });
+
+  document.getElementById("search").addEventListener("input", function(e){
+    state.search = e.target.value; renderKpis(); renderTable();
+  });
+  document.getElementById("mesFilter").addEventListener("change", function(e){
+    state.mes = e.target.value; renderKpis(); renderTable();
+  });
+  document.getElementById("aereoFilter").addEventListener("change", function(e){
+    state.aereo = e.target.value; renderKpis(); renderTable();
+  });
+  document.getElementById("statusFilter").addEventListener("click", function(e){
+    var btn = e.target.closest("button[data-v]");
+    if(!btn) return;
+    state.status = btn.dataset.v;
+    document.querySelectorAll("#statusFilter button").forEach(function(b){ b.classList.toggle("active", b===btn); });
+    renderKpis(); renderTable();
+  });
+
+  document.getElementById("btnReset").addEventListener("click", function(){
+    if(confirm("Isso vai substituir todos os dados atuais pelos dados originais da planilha (julho–agosto/2026). Continuar?")){
+      trips = seedWithIds();
+      save(trips);
+      renderAll();
+    }
+  });
+
+  document.getElementById("btnExportJson").addEventListener("click", function(){
+    var blob = new Blob([JSON.stringify(trips, null, 2)], {type:"application/json"});
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "sellmed-viagens-backup-"+ new Date().toISOString().slice(0,10) +".json";
+    a.click();
+  });
+
+  document.getElementById("btnImportJson").addEventListener("click", function(){
+    document.getElementById("fileImport").click();
+  });
+  document.getElementById("fileImport").addEventListener("change", function(e){
+    var file = e.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      try{
+        var data = JSON.parse(reader.result);
+        if(!Array.isArray(data)) throw new Error("formato inválido");
+        if(confirm("Importar "+ data.length +" viagem(ns)? Isso substitui os dados atuais.")){
+          trips = data.map(function(t){ if(!t.id) t.id = uid(); return t; });
+          save(trips);
+          renderAll();
+        }
+      }catch(err){
+        alert("Não foi possível ler este arquivo como backup válido: " + err.message);
+      }
+      e.target.value = "";
+    };
+    reader.readAsText(file);
+  });
+
+  function csvEscape(v){
+    v = v==null ? "" : String(v);
+    if(/[",\n;]/.test(v)) v = '"' + v.replace(/"/g,'""') + '"';
+    return v;
+  }
+  document.getElementById("btnExportCsv").addEventListener("click", function(){
+    var cols = ["Status","Mês","Data solicitação","Solicitação","Viajante","Datas viagem",
+      "Trecho aéreo","Valor aéreo","Fee aéreo","Forma pgto aéreo","Hospedagem","Valor hospedagem",
+      "Faturamento hospedagem","Valor final","Pagamento da fatura referente feito","Observações"];
+    var rows = [cols.join(";")];
+    filtered().forEach(function(t){
+      rows.push([
+        statusLabel(t), t.mes, t.dataCompra, t.solicitacao, t.viajante, t.dataViagem,
+        (t.aereo&&t.aereo.trecho)||"", (t.aereo&&t.aereo.valor)||0, (t.aereo&&t.aereo.fee)||0, (t.aereo&&t.aereo.forma)||"",
+        (t.hospedagem&&t.hospedagem.detalhe)||(t.hospedagem&&t.hospedagem.tem)||"", (t.hospedagem&&t.hospedagem.valor)||0,
+        (t.hospedagem&&t.hospedagem.forma)||"", t.valorFinal, (t.pagamentoFaturaFeito? "Sim":"Não"), t.obs||""
+      ].map(csvEscape).join(";"));
+    });
+    var blob = new Blob(["﻿"+rows.join("\n")], {type:"text/csv;charset=utf-8"});
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "sellmed-viagens-"+ new Date().toISOString().slice(0,10) +".csv";
+    a.click();
+  });
+
+  // Exporta em PDF usando a caixa de impressão nativa do navegador — sem
+  // biblioteca externa. O PDF sai exatamente com os filtros aplicados na
+  // tela (a tabela impressa é a mesma que já está filtrada visualmente).
+  document.getElementById("btnExportPdf").addEventListener("click", function(){
+    var filtrosTxt = [];
+    filtrosTxt.push("Status: " + (state.status === "todos" ? "Todos" : state.status === "ok" ? "OK" : "Pendentes"));
+    filtrosTxt.push("Mês: " + (state.mes === "todos" ? "Todos" : state.mes));
+    filtrosTxt.push("Aéreo: " + (state.aereo === "todos" ? "Todos" : state.aereo === "com" ? "Com aéreo" : "Sem aéreo"));
+    if(state.search.trim()) filtrosTxt.push('Busca: "' + state.search.trim() + '"');
+
+    var agora = new Date();
+    document.getElementById("printHeader").innerHTML =
+      '<h1>Controle de Viagens — Sellmed Brasil</h1>' +
+      '<div class="meta">' + esc(filtrosTxt.join(" · ")) + '</div>' +
+      '<div class="meta">Gerado em ' + agora.toLocaleDateString("pt-BR") + ' às ' + agora.toLocaleTimeString("pt-BR").slice(0,5) + '</div>';
+
+    window.print();
+  });
+
+  // ---------------------------------------------------------------
+  // Sincronização com o formulário de solicitação (Google Apps Script)
+  // ---------------------------------------------------------------
+  var MES_PT = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
+
+  function isoToBR(iso){
+    if(!iso) return "";
+    var m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if(!m) return iso;
+    return m[3] + "/" + m[2] + "/" + m[1];
+  }
+  function mesFromISO(iso){
+    if(!iso) return "";
+    var m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if(!m) return "";
+    return MES_PT[(+m[2]) - 1] || "";
+  }
+  function isConfigured(){
+    return SCRIPT_URL && SCRIPT_URL.indexOf("REPLACE_WITH") !== 0;
+  }
+  // O "id" de cada linha (ex: "row-2") só é único dentro de uma planilha —
+  // se a planilha for recriada, a linha 2 de novo se chama "row-2". Por isso
+  // o controle de importados é isolado por SCRIPT_URL: trocar de planilha
+  // não faz o app achar, por engano, que uma solicitação nova já foi importada.
+  function readImportedIds(){
+    try{
+      var all = JSON.parse(localStorage.getItem(IMPORTED_KEY) || "{}");
+      if(Array.isArray(all)) return []; // formato antigo (não isolado por planilha) — descarta
+      return all[SCRIPT_URL] || [];
+    }catch(e){ return []; }
+  }
+  function saveImportedIds(ids){
+    try{
+      var raw = localStorage.getItem(IMPORTED_KEY) || "{}";
+      var all = JSON.parse(raw);
+      if(Array.isArray(all)) all = {};
+      all[SCRIPT_URL] = ids;
+      localStorage.setItem(IMPORTED_KEY, JSON.stringify(all));
+    }catch(e){}
+  }
+
+  // O formulário obriga preencher os campos de aéreo mesmo quando a pessoa
+  // não precisa voar — nesse caso ela normalmente digita "Não"/"N/A" ali.
+  // Isso detecta essas respostas pra não tratar como uma viagem "a cotar".
+  function isBlankOrNao(v){
+    var s = (v||"").trim().toLowerCase();
+    return !s || s === "não" || s === "nao" || s === "n/a" || s === "-";
+  }
+
+  function formRowToTrip(row){
+    var viagemParts = [];
+    if(row.departureDate) viagemParts.push("Ida " + isoToBR(row.departureDate) + (row.departureTime? " "+row.departureTime:""));
+    if(row.returnDate) viagemParts.push("Volta " + isoToBR(row.returnDate) + (row.returnTime? " "+row.returnTime:""));
+
+    // O formulário agora pergunta direto "Precisa de Passagem Aérea?" e
+    // "Precisa de Hotel?" (Sim/Não) — espelha exatamente essa resposta.
+    // Solicitações antigas (enviadas antes dessa pergunta existir) não têm
+    // esses campos preenchidos; nesse caso caímos de volta na detecção por
+    // texto ("Não"/"N/A" digitado nos campos) como antes.
+    var precisaAereo = row.needsFlight
+      ? row.needsFlight === "Sim"
+      : (!isBlankOrNao(row.originCity) && !isBlankOrNao(row.destinationCity));
+
+    var trecho = precisaAereo
+      ? [row.originCity, row.destinationCity].filter(Boolean).join(" ⇄ ") + (row.originAirport && !isBlankOrNao(row.originAirport) ? " (" + row.originAirport + ")" : "")
+      : "";
+
+    var hospParts = [];
+    if(row.locationPreference) hospParts.push("Localização: " + row.locationPreference);
+    if(row.checkinDate) hospParts.push("Check-in " + isoToBR(row.checkinDate));
+    if(row.checkoutDate) hospParts.push("Check-out " + isoToBR(row.checkoutDate));
+    if(row.checkinTime) hospParts.push("Check-in " + row.checkinTime);
+    if(row.checkoutTime) hospParts.push("Check-out " + row.checkoutTime);
+    if(row.breakfastIncluded) hospParts.push("Café da manhã: " + row.breakfastIncluded);
+    var precisaHotel = row.needsHotel
+      ? row.needsHotel === "Sim"
+      : (hospParts.length > 0);
+
+    var obsParts = [];
+    if(precisaAereo && row.airline && !isBlankOrNao(row.airline)) obsParts.push("Cia. aérea preferencial: " + row.airline);
+    if(precisaAereo && row.checkedBaggage) obsParts.push("Bagagem despachada: " + row.checkedBaggage);
+    if(row.transferAirportHotel === "Sim") obsParts.push("Transfer aeroporto→hotel: Sim");
+    if(row.transferHotelEvent === "Sim") obsParts.push("Transfer hotel→evento: Sim");
+    if(row.transferEventAirport === "Sim") obsParts.push("Transfer evento→aeroporto: Sim");
+    if(row.transportNotes) obsParts.push("Transporte: " + row.transportNotes);
+    obsParts.push("Recebido via formulário de solicitação" + (row.timestamp ? " em " + isoToBR(row.timestamp) : "") + ".");
+
+    var solParts = [];
+    if(precisaAereo) solParts.push("aéreo");
+    if(precisaHotel) solParts.push("hospedagem");
+    var solicitacao = "Solicitação via formulário" +
+      (solParts.length ? " (" + solParts.join(" + ") + ")" : "") +
+      (row.destinationCity && !isBlankOrNao(row.destinationCity) ? " — destino " + row.destinationCity : "");
+
+    return {
+      id: uid(),
+      formId: row.id,
+      status: "pend",
+      statusDetalhe: "Aguardando cotação",
+      mes: mesFromISO(row.departureDate) || mesFromISO(row.timestamp) || "",
+      dataCompra: isoToBR(row.timestamp) || isoToBR(row.departureDate) || "",
+      solicitacao: solicitacao,
+      viajante: row.fullName || "(sem nome)",
+      dataViagem: viagemParts.join(" · "),
+      pax:{ nome: row.fullName || "", cpf: row.cpf || "", nascimento: isoToBR(row.birthDate), email: row.email || "", telefone: row.phone || "" },
+      aereo: precisaAereo
+        ? {tem:"A cotar", trecho: trecho, valor: 0, fee: 0, forma: ""}
+        : {tem:"Não", trecho: "", valor: 0, fee: 0, forma: ""},
+      hospedagem: precisaHotel
+        ? {tem:"A cotar", detalhe: hospParts.join(" · "), valor: 0, forma: ""}
+        : {tem:"Não", detalhe: "", valor: 0, forma: ""},
+      valorFinal: 0,
+      obs: obsParts.join(" ")
+    };
+  }
+
+  function syncFromForm(opts){
+    opts = opts || {};
+    if(!isConfigured()){
+      if(!opts.silent) alert("SCRIPT_URL não configurada neste arquivo — não há de onde sincronizar.");
+      return;
+    }
+    var btn = document.getElementById("btnSync");
+    if(btn){ btn.disabled = true; btn.textContent = "🔄 Sincronizando…"; }
+
+    fetch(SCRIPT_URL + "?action=list")
+      .then(function(res){
+        if(!res.ok) throw new Error("HTTP " + res.status);
+        return res.json();
+      })
+      .then(function(data){
+        var items = (data && data.items) || [];
+        var imported = readImportedIds();
+        var importedSet = {};
+        imported.forEach(function(id){ importedSet[id] = true; });
+
+        var novos = items.filter(function(row){ return !importedSet[row.id]; });
+        if(novos.length){
+          novos.forEach(function(row){
+            trips.push(formRowToTrip(row));
+            imported.push(row.id);
+          });
+          save(trips);
+          saveImportedIds(imported);
+          renderAll();
+        }
+        if(!opts.silent){
+          alert(novos.length
+            ? novos.length + " nova(s) solicitação(ões) importada(s) do formulário."
+            : "Nenhuma solicitação nova encontrada.");
+        }
+      })
+      .catch(function(err){
+        console.error("[Sincronizar solicitações] falhou:", err);
+        if(!opts.silent){
+          alert("Não foi possível buscar as solicitações do formulário.\n\nVerifique se o Code.gs foi republicado (Implantar → Gerenciar implantações → Nova versão) depois de adicionar o endpoint \"?action=list\".\n\nDetalhe: " + err.message);
+        }
+      })
+      .finally(function(){
+        if(btn){ btn.disabled = false; btn.textContent = "🔄 Sincronizar solicitações"; }
+      });
+  }
+
+  document.getElementById("btnSync").addEventListener("click", function(){ syncFromForm({silent:false}); });
+
+  function startApp(){
+    renderAll();
+    syncFromForm({silent:true});
+    // Enquanto esta aba estiver aberta, verifica sozinho a cada 60s — não
+    // depende de a pessoa lembrar de clicar em "Sincronizar solicitações".
+    setInterval(function(){ syncFromForm({silent:true}); }, 60000);
+  }
+
+  // ---------------------------------------------------------------
+  // Tela de senha — este site fica público na Vercel (tem dados pessoais
+  // dos viajantes), então pedimos uma senha simples antes de mostrar
+  // qualquer coisa. Não é segurança de verdade (é tudo client-side, dá
+  // pra contornar vendo o código-fonte) — é só uma barreira contra
+  // acesso casual por quem topar com o link.
+  // ---------------------------------------------------------------
+  var LOCK_HASH = "bb70561b15a212e96937479c98ddd76e22440ad5647980554e4b99054d389df2";
+  var UNLOCK_KEY = "sellmedViagens.unlocked.v1";
+
+  function sha256Hex(text){
+    var data = new TextEncoder().encode(text);
+    return crypto.subtle.digest("SHA-256", data).then(function(buf){
+      return Array.prototype.map.call(new Uint8Array(buf), function(b){
+        return b.toString(16).padStart(2, "0");
+      }).join("");
+    });
+  }
+
+  function unlock(){
+    document.getElementById("lock-screen").style.display = "none";
+    document.getElementById("page-root").style.display = "";
+    startApp();
+  }
+
+  if(localStorage.getItem(UNLOCK_KEY) === "1"){
+    unlock();
+  }else{
+    document.getElementById("lock-input").focus();
+    document.getElementById("lock-form").addEventListener("submit", function(e){
+      e.preventDefault();
+      var input = document.getElementById("lock-input");
+      var errorEl = document.getElementById("lock-error");
+      sha256Hex(input.value).then(function(hash){
+        if(hash === LOCK_HASH){
+          try{ localStorage.setItem(UNLOCK_KEY, "1"); }catch(err){}
+          unlock();
+        }else{
+          errorEl.textContent = "Senha incorreta.";
+          input.value = "";
+          input.focus();
+        }
+      });
+    });
+  }
+})();
+</script>
