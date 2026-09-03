@@ -851,6 +851,18 @@
       }).join("") +
       '</select>';
   }
+  function simNaoSelect(name, value){
+    var opts = ["Sim", "Não"];
+    // preserva um valor antigo fora do padrão (ex.: "A cotar", vindo da
+    // sincronização com o formulário) em vez de apagar ao abrir pra editar.
+    if(value && opts.indexOf(value) === -1) opts = opts.concat([value]);
+    return '<select name="'+name+'">' +
+      '<option value=""'+(!value?" selected":"")+'>—</option>' +
+      opts.map(function(o){
+        return '<option value="'+esc(o)+'"'+(value===o?" selected":"")+'>'+esc(o)+'</option>';
+      }).join("") +
+      '</select>';
+  }
   var STATUS_OPTIONS = [
     {value:"realizado", label:"REALIZADO"},
     {value:"aguardando_cotacao", label:"AGUARDANDO COTAÇÃO"},
@@ -1088,7 +1100,7 @@
 
             '<fieldset><legend>Aéreo</legend>' +
               '<div class="field-grid">' +
-                '<div class="field"><label>Situação</label><input name="aereoTem" value="'+esc(t.aereo.tem)+'" placeholder="Sim / Não"></div>' +
+                '<div class="field"><label>Situação</label>'+simNaoSelect("aereoTem", t.aereo.tem)+'</div>' +
                 '<div class="field"><label>Origem</label><input name="aereoOrigem" value="'+esc(t.aereo.origem)+'"></div>' +
                 '<div class="field"><label>Destino</label><input name="aereoDestino" value="'+esc(t.aereo.destino)+'"></div>' +
                 '<div class="field"><label>Valor (R$)</label><input name="aereoValor" id="fldAereoValor" type="number" step="0.01" value="'+ (t.aereo.valor||0) +'"></div>' +
@@ -1099,7 +1111,7 @@
 
             '<fieldset><legend>Hospedagem</legend>' +
               '<div class="field-grid">' +
-                '<div class="field"><label>Situação</label><input name="hospTem" value="'+esc(t.hospedagem.tem)+'" placeholder="Sim / Não"></div>' +
+                '<div class="field"><label>Situação</label>'+simNaoSelect("hospTem", t.hospedagem.tem)+'</div>' +
                 '<div class="field"><label>Detalhe / local</label><input name="hospDetalhe" value="'+esc(t.hospedagem.detalhe)+'"></div>' +
                 '<div class="field"><label>Valor (R$)</label><input name="hospValor" id="fldHospValor" type="number" step="0.01" value="'+ (t.hospedagem.valor||0) +'"></div>' +
                 '<div class="field full"><label>Forma de pagamento</label>'+formaPagamentoSelect("hospForma", t.hospedagem.forma)+'</div>' +
