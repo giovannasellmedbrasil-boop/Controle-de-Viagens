@@ -166,6 +166,7 @@
   .pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;}
   .pill.ok{background:var(--green-soft);color:var(--green);}
   .pill.pend{background:var(--amber-soft);color:var(--amber);}
+  .pill.info{background:var(--teal-soft);color:var(--teal);}
 
   .empty-state{padding:48px 24px;text-align:center;color:var(--text-muted);}
   .empty-state .big{font-size:32px;margin-bottom:8px;}
@@ -275,8 +276,9 @@
     <input type="search" id="search" placeholder="Buscar por viajante, solicitação ou trecho…">
     <div class="status-pill-toggle" id="statusFilter">
       <button data-v="todos" class="active">Todos</button>
-      <button data-v="ok">OK</button>
-      <button data-v="pend">Pendentes</button>
+      <button data-v="realizado">Realizado</button>
+      <button data-v="aguardando_cotacao">Aguard. cotação</button>
+      <button data-v="aguardando_aprovacao">Aguard. aprovação</button>
     </div>
     <select id="mesFilter"></select>
     <select id="aereoFilter">
@@ -325,8 +327,16 @@
 (function(){
   "use strict";
 
-  var STORAGE_KEY = "sellmedViagens.v5";
   var IMPORTED_KEY = "sellmedViagens.formImportIds.v1";
+  // Banco Postgres (Supabase) — dados compartilhados entre qualquer navegador
+  // ou computador que abrir este app (antes ficava só no localStorage de
+  // cada navegador). A anon key é pública por design (protegida por RLS no
+  // lado do banco), mas ainda assim o acesso à tabela fica liberado pra
+  // qualquer um que extrair essa chave do código-fonte — a única barreira
+  // real aqui é a tela de senha abaixo + a proteção do próprio Vercel.
+  var SUPABASE_URL = "";  // removido nesta cópia pública -- ver README
+  var SUPABASE_ANON_KEY = "";  // removido nesta cópia pública -- ver README
+  var SUPABASE_TABLE = SUPABASE_URL + "/rest/v1/viagens";
   // Mesma URL do Google Apps Script usada pelo formulário em
   // solicitacao-viagem-app/assets/app.js — precisa do endpoint "?action=list"
   // (adicionado em apps-script/Code.gs) publicado numa nova versão do deploy.
@@ -334,321 +344,328 @@
   var fmtBRL = new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"});
 
   function money(n){ return fmtBRL.format(Number(n)||0); }
-  function uid(){ return "t" + Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
+  function uid(){
+    if(crypto && crypto.randomUUID) return crypto.randomUUID();
+    // fallback pra navegadores muito antigos sem crypto.randomUUID
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c){
+      var r = Math.random()*16|0, v = c === "x" ? r : (r&0x3|0x8);
+      return v.toString(16);
+    });
+  }
 
   // ---------------------------------------------------------------
   // Dados históricos (importados da planilha de junho–julho/2026)
   // ---------------------------------------------------------------
   var SEED_DATA = [
-    {status:"ok", mes:"JUNHO", dataCompra:"18/06/2026",
+    {status:"realizado", mes:"JUNHO", dataCompra:"18/06/2026",
      solicitacao:"Hospedagens reservadas: 1 diária em POA (23→24/06), 1 diária em Pelotas (24→25/06, sugestão Jacques Georges Business Hotel), 1 diária em POA (25→26/06)",
      viajante:"Daniele Lopes", pax:{}, dataViagem:"Ida 23/06 · Volta 26/06",
      aereo:{tem:"Já comprado pela viajante", trecho:"", valor:0, fee:0, forma:"N/A"},
      hospedagem:{tem:"Sim", detalhe:"POA e Pelotas", valor:899.32, forma:"Faturado — fatura 21/06, venc. 01/07"},
      valorFinal:899.32, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JUNHO", dataCompra:"18/06/2026", solicitacao:"Aéreo e hospedagem SP",
+    {status:"realizado", mes:"JUNHO", dataCompra:"18/06/2026", solicitacao:"Aéreo e hospedagem SP",
      viajante:"Alice Moraes", pax:{}, dataViagem:"Ida 22/06 · Volta 23/06",
      aereo:{tem:"Sim", trecho:"Maceió ⇄ SP", valor:2313.81, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"", valor:262.57, forma:"Fatura dia 01, venc. dia 11 do mês seguinte"},
      valorFinal:2595.38, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JUNHO", dataCompra:"19/06/2026", solicitacao:"Aéreo e hospedagem SP → Brasília",
+    {status:"realizado", mes:"JUNHO", dataCompra:"19/06/2026", solicitacao:"Aéreo e hospedagem SP → Brasília",
      viajante:"Daniele Lopes", pax:{}, dataViagem:"Ida 01/07 · Volta 03/07",
      aereo:{tem:"Sim", trecho:"SP ⇄ Brasília (ida bem cedo, volta fim do dia)", valor:1240.09, fee:38, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"Preferência hotel na Asa Norte", valor:627.30, forma:"Fatura dia 01, venc. dia 11 do mês seguinte"},
      valorFinal:1905.39, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JUNHO", dataCompra:"19/06/2026", solicitacao:"Aéreo e hospedagem Recife → Brasília",
+    {status:"realizado", mes:"JUNHO", dataCompra:"19/06/2026", solicitacao:"Aéreo e hospedagem Recife → Brasília",
      viajante:"Andre Sales", pax:{}, dataViagem:"Ida 01/07 · Volta 03/07",
      aereo:{tem:"Sim", trecho:"Recife ⇄ Brasília (ida cedo, volta à noite — preferência Azul)", valor:2968.39, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"Quarto com cama casal, se possível com academia", valor:627.30, forma:"Fatura dia 01, venc. dia 11 do mês seguinte"},
      valorFinal:3614.69, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JUNHO", dataCompra:"22/06/2026", solicitacao:"Aéreo",
+    {status:"realizado", mes:"JUNHO", dataCompra:"22/06/2026", solicitacao:"Aéreo",
      viajante:"Alexandre Magno Macario Nunes Soares", pax:{}, dataViagem:"Ida e volta 30/06",
      aereo:{tem:"Sim", trecho:"Recife ⇄ Fortaleza", valor:1515.20, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Não", detalhe:"", valor:0, forma:""},
      valorFinal:1534.20, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JUNHO", dataCompra:"22/06/2026", solicitacao:"Aéreo e hospedagem",
+    {status:"realizado", mes:"JUNHO", dataCompra:"22/06/2026", solicitacao:"Aéreo e hospedagem",
      viajante:"Alexandre Magno Macario Nunes Soares", pax:{}, dataViagem:"Ida e volta 02/07",
      aereo:{tem:"Sim", trecho:"Fortaleza ⇄ Recife", valor:2385.20, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"Ecco Fortaleza — 1 diária", valor:255.75, forma:"Fatura dia 01, venc. dia 11 do mês seguinte"},
      valorFinal:2659.95, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JUNHO", dataCompra:"22/06/2026", solicitacao:"Aéreo e hospedagem",
+    {status:"realizado", mes:"JUNHO", dataCompra:"22/06/2026", solicitacao:"Aéreo e hospedagem",
      viajante:"Alice Moraes", pax:{}, dataViagem:"Ida 30/06 · Volta 02/07",
      aereo:{tem:"Sim", trecho:"Recife ⇄ Fortaleza", valor:1727.20, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"Fortaleza", valor:612.80, forma:"Fatura dia 01, venc. dia 11 do mês seguinte"},
      valorFinal:2359.00, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JUNHO", dataCompra:"24/06/2026", solicitacao:"Aéreo Dr. Edgar",
+    {status:"realizado", mes:"JUNHO", dataCompra:"24/06/2026", solicitacao:"Aéreo Dr. Edgar",
      viajante:"Edgar", pax:{}, dataViagem:"Ida e volta 02/07",
      aereo:{tem:"Sim", trecho:"Rio ⇄ Campinas", valor:2252.17, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Não", detalhe:"", valor:0, forma:"Taxa de emissão"},
      valorFinal:2271.17, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JUNHO", dataCompra:"25/06/2026", solicitacao:"Solicitação da Dani para um especialista",
+    {status:"realizado", mes:"JUNHO", dataCompra:"25/06/2026", solicitacao:"Solicitação da Dani para um especialista",
      viajante:"Járede Pereira", pax:{cpf:"", nascimento:""}, dataViagem:"Ida 03/07 manhã · Volta 04/07 noite",
      aereo:{tem:"Sim", trecho:"SP ⇄ Curitiba", valor:1460.40, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"Guarapuava", valor:255.00, forma:"Faturado — fatura 01/07, venc. 11/07"},
      valorFinal:1734.40, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JUNHO", dataCompra:"26/06/2026", solicitacao:"Aéreo e hospedagem",
+    {status:"realizado", mes:"JUNHO", dataCompra:"26/06/2026", solicitacao:"Aéreo e hospedagem",
      viajante:"Iury Hudson Correia de Lacerda", pax:{}, dataViagem:"Ida 30/06 · Volta 08/07",
      aereo:{tem:"Sim", trecho:"Recife ⇄ Frankfurt", valor:6463.23, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"Hotel Frankfurt (30/06→02/07 manhã) + Novotel Karlsruhe (02/07→04/07)", valor:2949.00, forma:"Reservado direto na Booking"},
      valorFinal:9431.23, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JUNHO", dataCompra:"29/06/2026", solicitacao:"Aéreo e hospedagem (Chile → SP)",
+    {status:"realizado", mes:"JUNHO", dataCompra:"29/06/2026", solicitacao:"Aéreo e hospedagem (Chile → SP)",
      viajante:"Stephanie Venus", pax:{}, dataViagem:"Ida 01/07 · Volta 02/07 — Santiago ⇄ GRU",
      aereo:{tem:"Sim", trecho:"Chile ⇄ GRU", valor:2314.72, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"Jundiaí", valor:1125.98, forma:"Faturado — fatura dia 01, venc. dia 11 de julho"},
      valorFinal:3459.70, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JUNHO", dataCompra:"30/06/2026", solicitacao:"Dr. Marcio — RJ para São José (hospedagem Cassino Hotel)",
+    {status:"realizado", mes:"JUNHO", dataCompra:"30/06/2026", solicitacao:"Dr. Marcio — RJ para São José (hospedagem Cassino Hotel)",
      viajante:"Marcio Montinegro", pax:{}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"Rio ⇄ Araçatuba", valor:3367.01, fee:38, forma:"PIX TDM Medical"},
      hospedagem:{tem:"Sim", detalhe:"São José", valor:583.12, forma:"PIX TDM Medical"},
      valorFinal:3988.13, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JUNHO", dataCompra:"30/06/2026", solicitacao:"Alice — Maceió para São José",
+    {status:"realizado", mes:"JUNHO", dataCompra:"30/06/2026", solicitacao:"Alice — Maceió para São José",
      viajante:"Alice Souza de Moraes Maciel", pax:{}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"Maceió ⇄ Araçatuba", valor:3276.63, fee:38, forma:""},
      hospedagem:{tem:"Sim", detalhe:"São José", valor:0, forma:""},
      valorFinal:3314.63, obs:"Custo de hospedagem em São José possivelmente consolidado no registro do Dr. Marcio Montinegro.", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"06/07/2026", solicitacao:"SP - Salvador",
+    {status:"realizado", mes:"JULHO", dataCompra:"06/07/2026", solicitacao:"SP - Salvador",
      viajante:"Alice Moraes", pax:{}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"SP ⇄ Salvador / Salvador ⇄ Maceió", valor:3013.93, fee:38, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"Salvador", valor:320.39, forma:""},
      valorFinal:3372.32, obs:"Valor final calculado a partir dos componentes (não constava explicitamente na planilha).",
      pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"07/07/2026", solicitacao:"Hospedagem 07/07 até 08/07 + aéreo dia 08",
+    {status:"realizado", mes:"JULHO", dataCompra:"07/07/2026", solicitacao:"Hospedagem 07/07 até 08/07 + aéreo dia 08",
      viajante:"Marcio Montinegro", pax:{}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"Congonhas ⇄ Rio de Janeiro", valor:3694.37, fee:38, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"Intercity", valor:1047.61, forma:"Faturado — fatura 11/07, venc. 21/07"},
      valorFinal:4779.98, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"07/07/2026", solicitacao:"Aéreo e hospedagem 23/07",
+    {status:"realizado", mes:"JULHO", dataCompra:"07/07/2026", solicitacao:"Aéreo e hospedagem 23/07",
      viajante:"Rodrigo da Silva Cardoso", pax:{}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"SP ⇄ RJ", valor:1440.08, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"Preferência Ibis Botafogo", valor:423.93, forma:"Faturado — fatura 11/07, venc. 21/07"},
      valorFinal:1883.01, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"08/07/2026", solicitacao:"Rodrigo BH",
+    {status:"realizado", mes:"JULHO", dataCompra:"08/07/2026", solicitacao:"Rodrigo BH",
      viajante:"Rodrigo da Silva Cardoso", pax:{}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"Congonhas (SP) ⇄ BH", valor:681.90, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"Preferência Savassi Ibis Budget", valor:360.72, forma:"Faturado — fatura 11/07, venc. 21/07"},
      valorFinal:1061.62, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"12/07/2026", solicitacao:"Hospedagem 13/07 e 14/07",
+    {status:"realizado", mes:"JULHO", dataCompra:"12/07/2026", solicitacao:"Hospedagem 13/07 e 14/07",
      viajante:"Jarede Pereira", pax:{}, dataViagem:"",
      aereo:{tem:"Não", trecho:"", valor:0, fee:0, forma:""},
      hospedagem:{tem:"Sim", detalhe:"Cassino Hotel", valor:322.44, forma:"Faturado — fatura 11/07, venc. 21/07"},
      valorFinal:322.44, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"13/07/2026", solicitacao:"Hospedagem 14/07 e 15/07",
+    {status:"realizado", mes:"JULHO", dataCompra:"13/07/2026", solicitacao:"Hospedagem 14/07 e 15/07",
      viajante:"Marcio Montinegro", pax:{}, dataViagem:"",
      aereo:{tem:"Não", trecho:"", valor:0, fee:0, forma:""},
      hospedagem:{tem:"Sim", detalhe:"", valor:428.79, forma:"Faturado — fatura 11/07, venc. 21/07"},
      valorFinal:428.79, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"15/07/2026", solicitacao:"Aéreo Dr. Juliana",
+    {status:"realizado", mes:"JULHO", dataCompra:"15/07/2026", solicitacao:"Aéreo Dr. Juliana",
      viajante:"Juliana Rodrigues Neves", pax:{}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"Recife ⇄ SP", valor:1575.49, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Não", detalhe:"", valor:0, forma:""},
      valorFinal:1594.49, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"16/07/2026", solicitacao:"Voo e hospedagem Maceió–Jundiaí (20/07 e 21/07)",
+    {status:"realizado", mes:"JULHO", dataCompra:"16/07/2026", solicitacao:"Voo e hospedagem Maceió–Jundiaí (20/07 e 21/07)",
      viajante:"Alice Moraes", pax:{}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"Maceió ⇄ SP", valor:3163.83, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"", valor:335.43, forma:"Emissões 11–20/07 — fatura 21/07, venc. 01/08"},
      valorFinal:3518.26, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"16/07/2026", solicitacao:"Aéreo SP (Campinas)–RJ, domingo dia 26 final da tarde, volta dia 28 após 15h + hospedagem Novotel Parque Olímpico (26 a 28)",
+    {status:"realizado", mes:"JULHO", dataCompra:"16/07/2026", solicitacao:"Aéreo SP (Campinas)–RJ, domingo dia 26 final da tarde, volta dia 28 após 15h + hospedagem Novotel Parque Olímpico (26 a 28)",
      viajante:"Jarede Pereira", pax:{cpf:"", nascimento:"", email:""}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"SP (Campinas) ⇄ RJ", valor:2766.75, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"Novotel Parque Olímpico", valor:1466.19, forma:"Emissões 11–20/07 — fatura 21/07, venc. 01/08"},
      valorFinal:4251.94, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"17/07/2026", solicitacao:"Voo RJ–Jundiaí 21/07",
+    {status:"realizado", mes:"JULHO", dataCompra:"17/07/2026", solicitacao:"Voo RJ–Jundiaí 21/07",
      viajante:"Marcio Montinegro", pax:{}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"RJ ⇄ SP", valor:5213.09, fee:38, forma:"Master 3x"},
      hospedagem:{tem:"Não", detalhe:"", valor:0, forma:""},
      valorFinal:5251.09, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"18/07/2026", solicitacao:"Aéreo ida SOLACI e treinamento Rio — 24/07 Maceió→Rio (manhã), 28/07 Rio→SP (noite). Hospedagem junto com Dani Delfina (valor na linha dela).",
+    {status:"realizado", mes:"JULHO", dataCompra:"18/07/2026", solicitacao:"Aéreo ida SOLACI e treinamento Rio — 24/07 Maceió→Rio (manhã), 28/07 Rio→SP (noite). Hospedagem junto com Dani Delfina (valor na linha dela).",
      viajante:"Alice Moraes", pax:{nome:"Alice Souza de Moraes Maciel", email:"", nascimento:"", cpf:""}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"Maceió → Rio → SP", valor:2814.34, fee:57, forma:"Master 3x"},
      hospedagem:{tem:"Não", detalhe:"", valor:0, forma:""},
      valorFinal:2871.34, obs:"Hospedagem conjunta com Dani Delfina — valor lançado no registro dela.", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"18/07/2026", solicitacao:"Aéreo volta SOLACI — 31/07 SP→Maceió, fim da tarde ou noite",
+    {status:"realizado", mes:"JULHO", dataCompra:"18/07/2026", solicitacao:"Aéreo volta SOLACI — 31/07 SP→Maceió, fim da tarde ou noite",
      viajante:"Alice Moraes", pax:{nome:"Alice Souza de Moraes Maciel", email:"", nascimento:"", cpf:""}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"SP ⇄ Maceió", valor:461.53, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Não", detalhe:"", valor:0, forma:""},
      valorFinal:480.53, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"20/07/2026", solicitacao:"Aéreo e hospedagem Rio 26 a 28 (LATAM, preferência Congonhas 1º voo) — Hotel Ariane",
+    {status:"realizado", mes:"JULHO", dataCompra:"20/07/2026", solicitacao:"Aéreo e hospedagem Rio 26 a 28 (LATAM, preferência Congonhas 1º voo) — Hotel Ariane",
      viajante:"Ariane Sanchez Nunes Salles", pax:{cpf:"", email:"", nascimento:""}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"SP ⇄ RJ", valor:1917.83, fee:38, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"", valor:403.87, forma:"Emissões 11–20/07 — fatura 21/07, venc. 01/08"},
      valorFinal:2359.70, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"20/07/2026", solicitacao:"Aéreo e hospedagem Rio 26 a 28 — Hotel Dr. Leonardo",
+    {status:"realizado", mes:"JULHO", dataCompra:"20/07/2026", solicitacao:"Aéreo e hospedagem Rio 26 a 28 — Hotel Dr. Leonardo",
      viajante:"Leonardo Giglio Dragone", pax:{cpf:"", email:"", nascimento:""}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"SP ⇄ RJ", valor:1917.83, fee:38, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"", valor:403.87, forma:"Emissões 11–20/07 — fatura 21/07, venc. 01/08"},
      valorFinal:2359.70, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"21/07/2026", solicitacao:"Aéreo e hospedagem Rio 26 a 28 — Hotel Dr. Bruno",
+    {status:"realizado", mes:"JULHO", dataCompra:"21/07/2026", solicitacao:"Aéreo e hospedagem Rio 26 a 28 — Hotel Dr. Bruno",
      viajante:"Bruno Silva Ribeiro", pax:{cpf:"", email:"", nascimento:""}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"SP ⇄ RJ", valor:2416.59, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"", valor:390.28, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
      valorFinal:2825.87, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Aéreo Recife - Rio",
+    {status:"realizado", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Aéreo Recife - Rio",
      viajante:"Dani Delfina", pax:{nome:"Daniela Delfina dos Santos Souza", cpf:"", nascimento:"", email:""}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"Recife ⇄ Rio", valor:1435.02, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Não", detalhe:"", valor:0, forma:""},
      valorFinal:1454.02, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"21/07/2026", solicitacao:"Hospedagem Rio 26 a 28 (Dani Delfina + Alice)",
+    {status:"realizado", mes:"JULHO", dataCompra:"21/07/2026", solicitacao:"Hospedagem Rio 26 a 28 (Dani Delfina + Alice)",
      viajante:"Dani Delfina", pax:{nome:"Daniela Delfina dos Santos Souza", cpf:"", nascimento:"", email:""}, dataViagem:"",
      aereo:{tem:"Não", trecho:"", valor:0, fee:0, forma:""},
      hospedagem:{tem:"Sim", detalhe:"", valor:1047.08, forma:"Faturado — emissões 21–30/31, fatura 01/09, venc. 11/08"},
      valorFinal:1047.08, obs:"Quarto dividido com Alice Moraes.", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Aéreo Rio - SP",
+    {status:"realizado", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Aéreo Rio - SP",
      viajante:"Dani Delfina", pax:{nome:"Daniela Delfina dos Santos Souza", cpf:"", nascimento:"", email:""}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"Rio ⇄ SP", valor:2932.91, fee:19, forma:"Faturado — emissões 21–30/31, fatura 01/09, venc. 11/08"},
      hospedagem:{tem:"Não", detalhe:"", valor:0, forma:""},
      valorFinal:2951.91, obs:"A planilha também menciona um trecho SP→Recife em 31/07 (precisa ser cedo) na mesma solicitação, sem valor discriminado.", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Hospedagem SP SOLACI 28 a 31 (quarto dividido com Alice)",
+    {status:"realizado", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Hospedagem SP SOLACI 28 a 31 (quarto dividido com Alice)",
      viajante:"Dani Delfina", pax:{nome:"Daniela Delfina dos Santos Souza", cpf:"", nascimento:"", email:""}, dataViagem:"",
      aereo:{tem:"Não", trecho:"", valor:0, fee:0, forma:""},
      hospedagem:{tem:"Sim", detalhe:"", valor:1602.92, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
      valorFinal:1602.92, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Hospedagem SP SOLACI 29 a 30 (quarto dividido com Jarede)",
+    {status:"realizado", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Hospedagem SP SOLACI 29 a 30 (quarto dividido com Jarede)",
      viajante:"Daniele Lopes", pax:{nome:"Daniele Caroline Lopes", cpf:"", nascimento:"", email:""}, dataViagem:"",
      aereo:{tem:"Não", trecho:"", valor:0, fee:0, forma:""},
      hospedagem:{tem:"Sim", detalhe:"", valor:1150.43, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
      valorFinal:1150.43, obs:"Quarto dividido com Jarede Pereira.", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Aéreo e hospedagem SOLACI (vem de Recife)",
+    {status:"realizado", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Aéreo e hospedagem SOLACI (vem de Recife)",
      viajante:"Thyally Rayssa", pax:{nome:"Thyally Rayssa Ribeiro da Silva", cpf:"", nascimento:"", email:""}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"Recife ⇄ SP", valor:1350.46, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"", valor:1602.92, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
      valorFinal:2972.38, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Aéreo e hospedagem SOLACI SBCHI (quarto dividido entre os 2)",
+    {status:"realizado", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Aéreo e hospedagem SOLACI SBCHI (quarto dividido entre os 2)",
      viajante:"Andre Sales", pax:{nome:"Andre Luiz Cavalcanti Dias Sales", cpf:"", nascimento:"", email:""}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"Recife ⇄ SP", valor:1350.46, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"", valor:1602.92, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
      valorFinal:2972.38, obs:"A planilha soma R$ 4.341,84 nesta linha, aparentemente somando também o trecho aéreo do Erick Vieira (quarto dividido entre os dois). Valor aqui reflete apenas os itens do André — conferir fatura.", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Aéreo SOLACI SBCHI (quarto dividido com André)",
+    {status:"realizado", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Aéreo SOLACI SBCHI (quarto dividido com André)",
      viajante:"Erick Vieira", pax:{nome:"Erick Gomes Vieira de Melo", cpf:"", nascimento:"", email:""}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"Recife ⇄ SP", valor:1350.46, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim (custo lançado no registro de André Sales)", detalhe:"", valor:0, forma:""},
      valorFinal:1369.46, obs:"Hospedagem compartilhada com André Sales — custo lançado na linha dele.", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Aéreo e hospedagem SOLACI SBCHI (Eudes e Luciano, mesmo voo, preferência Congonhas, mesmo quarto)",
+    {status:"realizado", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Aéreo e hospedagem SOLACI SBCHI (Eudes e Luciano, mesmo voo, preferência Congonhas, mesmo quarto)",
      viajante:"Eudes Figueredo", pax:{nome:"Eudes Santos de Figueredo", cpf:"", nascimento:"", email:""}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"Recife ⇄ SP", valor:1350.46, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"", valor:1602.92, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
      valorFinal:2972.38, obs:"A planilha soma R$ 6.063,10 nesta linha, aparentemente somando também o trecho aéreo do Luciano Neves (quarto dividido entre os dois). Valor aqui reflete apenas os itens do Eudes — conferir fatura.", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Aéreo SOLACI SBCHI (mesmo quarto que Eudes)",
+    {status:"realizado", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Aéreo SOLACI SBCHI (mesmo quarto que Eudes)",
      viajante:"Luciano Neves", pax:{nome:"Luciano Alves das Neves", cpf:"", nascimento:"", email:""}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"Recife ⇄ SP", valor:3071.72, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim (custo lançado no registro de Eudes Figueredo)", detalhe:"", valor:0, forma:""},
      valorFinal:3090.72, obs:"Hospedagem compartilhada com Eudes Figueredo — custo lançado na linha dele.", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"BH - SP SOLACI SBCHI",
+    {status:"realizado", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"BH - SP SOLACI SBCHI",
      viajante:"Valdiene Carvalho", pax:{cpf:"", nascimento:"", email:""}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"BH ⇄ SP", valor:1290.10, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"", valor:1602.00, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
      valorFinal:2911.10, obs:"A planilha soma R$ 5.152,39 nesta linha, aparentemente somando também o trecho aéreo da Elaine Moya. Valor aqui reflete apenas os itens da Valdiene — conferir fatura.", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"RJ - SP SOLACI SBCHI",
+    {status:"realizado", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"RJ - SP SOLACI SBCHI",
      viajante:"Elaine Moya", pax:{nome:"Elaine Cristina Saldanha Moya", cpf:"", nascimento:"", email:""}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"RJ ⇄ SP", valor:1847.29, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Não informado nesta linha", detalhe:"", valor:0, forma:""},
      valorFinal:1866.29, obs:"Hospedagem não discriminada nesta linha; a planilha soma R$ 5.153,31 junto com a linha da Valdiene Carvalho.", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Hotel próximo ao Congresso SOLACI (check-in 30/07, check-out 31/07)",
+    {status:"realizado", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Hotel próximo ao Congresso SOLACI (check-in 30/07, check-out 31/07)",
      viajante:"Micheli Aparecida dos Santos", pax:{cpf:"", rg:"", nascimento:""}, dataViagem:"",
      aereo:{tem:"Não", trecho:"", valor:0, fee:0, forma:""},
      hospedagem:{tem:"Sim", detalhe:"", valor:558.71, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
      valorFinal:558.71, obs:"Quarto dividido com Natasha Fonseca Moura Cavalcanti.", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"21/07/2026", solicitacao:"Aéreo ida — Guarulhos para Rondônia",
+    {status:"realizado", mes:"JULHO", dataCompra:"21/07/2026", solicitacao:"Aéreo ida — Guarulhos para Rondônia",
      viajante:"Ana Paula Ferreira da Silva", pax:{cpf:"", nascimento:"", email:""}, dataViagem:"31/07",
      aereo:{tem:"Sim", trecho:"SP ⇄ Rondônia", valor:1524.76, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Não", detalhe:"", valor:0, forma:""},
      valorFinal:1543.76, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Aéreo ida e volta (Fortaleza–Rio) + hospedagem Rio",
+    {status:"realizado", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Aéreo ida e volta (Fortaleza–Rio) + hospedagem Rio",
      viajante:"Daniel Francisco de Mendonça Trompieri", pax:{}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"Fortaleza ⇄ Rio", valor:5233.44, fee:38, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"", valor:1027.79, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
      valorFinal:6299.23, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"30/07/2026", solicitacao:"Congresso Mundial de Cardiologia no Rio de Janeiro — Riocentro, Barra Olímpica. Ida quarta-feira manhã cedo (7/10), volta sábado à noite (10/10). Dois quartos de hotel.",
+    {status:"realizado", mes:"JULHO", dataCompra:"30/07/2026", solicitacao:"Congresso Mundial de Cardiologia no Rio de Janeiro — Riocentro, Barra Olímpica. Ida quarta-feira manhã cedo (7/10), volta sábado à noite (10/10). Dois quartos de hotel.",
      viajante:"Nelson Fernando Eugênio Hurtado", pax:{cpf:"", nascimento:""}, dataViagem:"Ida 7/10 · Volta 10/10",
      aereo:{tem:"Sim", trecho:"Recife ⇄ RJ", valor:1744.25, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"", valor:755.64, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
      valorFinal:2518.89, obs:"Viagem em grupo (4 pessoas) para o Congresso Mundial de Cardiologia.", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"30/07/2026", solicitacao:"Congresso Mundial de Cardiologia no Rio de Janeiro — mesma viagem do grupo (ver registro de Nelson Hurtado)",
+    {status:"realizado", mes:"JULHO", dataCompra:"30/07/2026", solicitacao:"Congresso Mundial de Cardiologia no Rio de Janeiro — mesma viagem do grupo (ver registro de Nelson Hurtado)",
      viajante:"Ariana Nicol Eugênio Vela", pax:{cpf:"", nascimento:""}, dataViagem:"Ida 7/10 · Volta 10/10",
      aereo:{tem:"Sim", trecho:"Recife ⇄ RJ", valor:1744.25, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"", valor:755.64, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
      valorFinal:2518.89, obs:"Viagem em grupo (4 pessoas) para o Congresso Mundial de Cardiologia.", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"30/07/2026", solicitacao:"Congresso Mundial de Cardiologia no Rio de Janeiro — mesma viagem do grupo (ver registro de Nelson Hurtado)",
+    {status:"realizado", mes:"JULHO", dataCompra:"30/07/2026", solicitacao:"Congresso Mundial de Cardiologia no Rio de Janeiro — mesma viagem do grupo (ver registro de Nelson Hurtado)",
      viajante:"Miguel Angel Eugênio Vela", pax:{cpf:"", nascimento:""}, dataViagem:"Ida 7/10 · Volta 10/10",
      aereo:{tem:"Sim", trecho:"Recife ⇄ RJ", valor:1744.25, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"", valor:755.64, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
      valorFinal:2518.89, obs:"Viagem em grupo (4 pessoas) para o Congresso Mundial de Cardiologia.", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"JULHO", dataCompra:"30/07/2026", solicitacao:"Congresso Mundial de Cardiologia no Rio de Janeiro — mesma viagem do grupo (ver registro de Nelson Hurtado)",
+    {status:"realizado", mes:"JULHO", dataCompra:"30/07/2026", solicitacao:"Congresso Mundial de Cardiologia no Rio de Janeiro — mesma viagem do grupo (ver registro de Nelson Hurtado)",
      viajante:"Christian Augusto Montesinos Calleja", pax:{cpf:"", nascimento:""}, dataViagem:"Ida 7/10 · Volta 10/10",
      aereo:{tem:"Sim", trecho:"Recife ⇄ RJ", valor:1744.25, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"", valor:755.64, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
      valorFinal:2518.89, obs:"Viagem em grupo (4 pessoas) para o Congresso Mundial de Cardiologia.", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"AGOSTO", dataCompra:"04/08/2026", solicitacao:"SP (GRU) - Recife. Ida 10/08/26 (7h), volta 13/08/26 (17h). Hotel próximo ao escritório da Sellmed.",
+    {status:"realizado", mes:"AGOSTO", dataCompra:"04/08/2026", solicitacao:"SP (GRU) - Recife. Ida 10/08/26 (7h), volta 13/08/26 (17h). Hotel próximo ao escritório da Sellmed.",
      viajante:"Gislene Brito de Souza", pax:{cpf:"", nascimento:"", email:"", telefone:""}, dataViagem:"Ida 10/08 · Volta 13/08",
      aereo:{tem:"Sim", trecho:"SP (GRU) ⇄ Recife", valor:3438.75, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"Próximo ao escritório da Sellmed", valor:1041.70, forma:"Faturado — emissões 1–10, fatura dia 11, venc. dia 21"},
      valorFinal:4499.45, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"AGOSTO", dataCompra:"06/08/2026", solicitacao:"Hotel em Ribeirão Preto",
+    {status:"realizado", mes:"AGOSTO", dataCompra:"06/08/2026", solicitacao:"Hotel em Ribeirão Preto",
      viajante:"Jarede Pereira", pax:{cpf:"", nascimento:"", email:""}, dataViagem:"",
      aereo:{tem:"Não", trecho:"", valor:0, fee:0, forma:""},
      hospedagem:{tem:"Sim", detalhe:"", valor:283.80, forma:"Faturado — emissões 1–10, fatura dia 11, venc. dia 21"},
      valorFinal:283.80, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"AGOSTO", dataCompra:"06/08/2026", solicitacao:"Recife - Fortaleza. Ida 11/08 à tarde, volta 14/08 após o almoço. Hotel 11 a 14/08.",
+    {status:"realizado", mes:"AGOSTO", dataCompra:"06/08/2026", solicitacao:"Recife - Fortaleza. Ida 11/08 à tarde, volta 14/08 após o almoço. Hotel 11 a 14/08.",
      viajante:"Luciano Neves", pax:{nome:"Luciano Alves das Neves", cpf:"", nascimento:"", email:""}, dataViagem:"Ida 11/08 · Volta 14/08",
      aereo:{tem:"Sim", trecho:"Recife ⇄ Fortaleza", valor:2128.42, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"", valor:673.11, forma:"Faturado — emissões 1–10, fatura dia 11, venc. dia 21"},
      valorFinal:2820.53, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"AGOSTO", dataCompra:"06/08/2026", solicitacao:"Recife - Fortaleza. Ida 11/08 à tarde, volta 14/08 após o almoço. Hotel 11 a 14/08.",
+    {status:"realizado", mes:"AGOSTO", dataCompra:"06/08/2026", solicitacao:"Recife - Fortaleza. Ida 11/08 à tarde, volta 14/08 após o almoço. Hotel 11 a 14/08.",
      viajante:"Eudes Figueredo", pax:{nome:"Eudes Santos de Figueredo", cpf:"", nascimento:"", email:""}, dataViagem:"Ida 11/08 · Volta 14/08",
      aereo:{tem:"Sim", trecho:"Recife ⇄ Fortaleza", valor:2128.42, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"", valor:673.11, forma:"Faturado — emissões 1–10, fatura dia 11, venc. dia 21"},
      valorFinal:2820.53, obs:"", pagamentoFaturaFeito:false},
 
-    {status:"ok", mes:"AGOSTO", dataCompra:"06/08/2026", solicitacao:"Maceió - Fortaleza. Somente ida 10/08, hotel 10/08 a 11/08 em Ribeirão.",
+    {status:"realizado", mes:"AGOSTO", dataCompra:"06/08/2026", solicitacao:"Maceió - Fortaleza. Somente ida 10/08, hotel 10/08 a 11/08 em Ribeirão.",
      viajante:"Alice Moraes", pax:{nome:"Alice Souza de Moraes Maciel", email:"", nascimento:"", cpf:""}, dataViagem:"10/08",
      aereo:{tem:"Sim", trecho:"Maceió ⇄ Ribeirão Preto", valor:2943.72, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"Ribeirão Preto", valor:283.80, forma:"Faturado — emissões 1–10, fatura dia 11, venc. dia 21"},
@@ -657,26 +674,163 @@
 
 
   function seedWithIds(){
-    return SEED_DATA.map(function(t){ t = JSON.parse(JSON.stringify(t)); t.id = uid(); return t; });
+    return SEED_DATA.map(function(t){
+      t = JSON.parse(JSON.stringify(t));
+      t.id = uid();
+      t.ano = t.ano || "";
+      // dados históricos ainda usam o campo único "dataViagem" — normaliza
+      // pro formato novo (ida/volta separados) na hora de gerar.
+      if(t.dataViagem !== undefined){
+        t.dataIda = t.dataViagem;
+        t.dataVolta = "";
+        delete t.dataViagem;
+      }
+      // idem pro campo único "trecho" do aéreo — separa em origem/destino.
+      if(t.aereo && t.aereo.trecho !== undefined){
+        var partes = t.aereo.trecho.split(/⇄|→/);
+        t.aereo.origem = (partes[0] || "").trim();
+        t.aereo.destino = partes.slice(1).join(t.aereo.trecho.indexOf("⇄")!==-1 ? "⇄" : "→").trim();
+        delete t.aereo.trecho;
+      }
+      return t;
+    });
   }
 
   // ---------------------------------------------------------------
-  // Persistência
+  // Persistência (Supabase Postgres via PostgREST)
   // ---------------------------------------------------------------
-  function load(){
-    try{
-      var raw = localStorage.getItem(STORAGE_KEY);
-      if(raw) return JSON.parse(raw);
-    }catch(e){}
-    var seeded = seedWithIds();
-    save(seeded);
-    return seeded;
-  }
-  function save(list){
-    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }catch(e){}
+  function supaHeaders(extra){
+    var h = {
+      "apikey": SUPABASE_ANON_KEY,
+      "Authorization": "Bearer " + SUPABASE_ANON_KEY,
+      "Content-Type": "application/json"
+    };
+    if(extra) for(var k in extra) h[k] = extra[k];
+    return h;
   }
 
-  var trips = load();
+  function brToISO(s){
+    if(!s) return null;
+    var m = String(s).trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if(!m) return null;
+    return m[3] + "-" + m[2] + "-" + m[1];
+  }
+
+  function rowToTrip(r){
+    return {
+      id: r.id,
+      formId: r.form_id || undefined,
+      status: r.status,
+      statusDetalhe: r.status_detalhe || "",
+      mes: r.mes || "",
+      ano: r.ano || "",
+      dataCompra: isoToBR(r.data_compra),
+      solicitacao: r.solicitacao || "",
+      viajante: r.viajante || "",
+      pax:{
+        nome: r.pax_nome || "", cpf: r.pax_cpf || "", nascimento: isoToBR(r.pax_nascimento),
+        email: r.pax_email || "", telefone: r.pax_telefone || "", rg: r.pax_rg || ""
+      },
+      dataIda: r.data_ida || "",
+      dataVolta: r.data_volta || "",
+      aereo:{ tem: r.aereo_tem || "", origem: r.aereo_origem || "", destino: r.aereo_destino || "", valor: Number(r.aereo_valor)||0, fee: Number(r.aereo_fee)||0, forma: r.aereo_forma || "" },
+      hospedagem:{ tem: r.hospedagem_tem || "", detalhe: r.hospedagem_detalhe || "", valor: Number(r.hospedagem_valor)||0, forma: r.hospedagem_forma || "" },
+      valorFinal: Number(r.valor_final)||0,
+      pagamentoFaturaFeito: !!r.pagamento_fatura_feito,
+      obs: r.obs || ""
+    };
+  }
+
+  function tripToRow(t){
+    var pax = t.pax || {}, aereo = t.aereo || {}, hosp = t.hospedagem || {};
+    return {
+      id: t.id,
+      form_id: t.formId || null,
+      status: t.status,
+      status_detalhe: t.statusDetalhe || null,
+      mes: t.mes || null,
+      ano: t.ano || null,
+      data_compra: brToISO(t.dataCompra),
+      solicitacao: t.solicitacao || null,
+      viajante: t.viajante || null,
+      pax_nome: pax.nome || null,
+      pax_cpf: pax.cpf || null,
+      pax_nascimento: brToISO(pax.nascimento),
+      pax_email: pax.email || null,
+      pax_telefone: pax.telefone || null,
+      pax_rg: pax.rg || null,
+      // registros antigos (SEED_DATA / restaurados) ainda têm só "dataViagem"
+      // combinado — se não houver dataIda/dataVolta explícitos, usa ele como
+      // fallback pra não perder a informação.
+      data_ida: t.dataIda || t.dataViagem || null,
+      data_volta: t.dataVolta || null,
+      aereo_tem: aereo.tem || null,
+      aereo_origem: aereo.origem || (aereo.trecho ? aereo.trecho.split(/⇄|→/)[0].trim() : null),
+      aereo_destino: aereo.destino || (aereo.trecho && aereo.trecho.indexOf("⇄") !== -1 ? aereo.trecho.split("⇄").slice(1).join("⇄").trim() : (aereo.trecho && aereo.trecho.indexOf("→") !== -1 ? aereo.trecho.split("→").slice(1).join("→").trim() : null)),
+      aereo_valor: aereo.valor || 0,
+      aereo_fee: aereo.fee || 0,
+      aereo_forma: aereo.forma || null,
+      hospedagem_tem: hosp.tem || null,
+      hospedagem_detalhe: hosp.detalhe || null,
+      hospedagem_valor: hosp.valor || 0,
+      hospedagem_forma: hosp.forma || null,
+      valor_final: t.valorFinal || 0,
+      pagamento_fatura_feito: !!t.pagamentoFaturaFeito,
+      obs: t.obs || null
+    };
+  }
+
+  function supaCheck(res){
+    if(!res.ok) return res.text().then(function(txt){ throw new Error("HTTP " + res.status + " " + txt); });
+    return res;
+  }
+
+  function loadTrips(){
+    return fetch(SUPABASE_TABLE + "?select=*&order=data_compra.desc.nullslast", { headers: supaHeaders() })
+      .then(supaCheck)
+      .then(function(res){ return res.json(); })
+      .then(function(rows){ return rows.map(rowToTrip); });
+  }
+
+  function upsertTrip(trip){
+    return fetch(SUPABASE_TABLE, {
+      method: "POST",
+      headers: supaHeaders({ "Prefer": "resolution=merge-duplicates,return=minimal" }),
+      body: JSON.stringify([tripToRow(trip)])
+    }).then(supaCheck);
+  }
+
+  function upsertTrips(list){
+    if(!list.length) return Promise.resolve();
+    return fetch(SUPABASE_TABLE, {
+      method: "POST",
+      headers: supaHeaders({ "Prefer": "resolution=merge-duplicates,return=minimal" }),
+      body: JSON.stringify(list.map(tripToRow))
+    }).then(supaCheck);
+  }
+
+  function patchTrip(id, partialRow){
+    return fetch(SUPABASE_TABLE + "?id=eq." + encodeURIComponent(id), {
+      method: "PATCH",
+      headers: supaHeaders({ "Prefer": "return=minimal" }),
+      body: JSON.stringify(partialRow)
+    }).then(supaCheck);
+  }
+
+  function deleteTripRemote(id){
+    return fetch(SUPABASE_TABLE + "?id=eq." + encodeURIComponent(id), {
+      method: "DELETE",
+      headers: supaHeaders()
+    }).then(supaCheck);
+  }
+
+  function replaceAllTrips(newTrips){
+    return fetch(SUPABASE_TABLE + "?id=not.is.null", { method:"DELETE", headers: supaHeaders() })
+      .then(supaCheck)
+      .then(function(){ return upsertTrips(newTrips); });
+  }
+
+  var trips = [];
   var state = { search:"", status:"todos", mes:"todos", aereo:"todos" };
 
   // ---------------------------------------------------------------
@@ -688,9 +842,26 @@
     if(!m) return 0;
     return new Date(+m[3], +m[2]-1, +m[1]).getTime();
   }
-  function isPend(t){ return t.status === "pend"; }
+  var FORMA_PAGAMENTO_OPTIONS = ["Cartão em 3x", "Faturado"];
+  function formaPagamentoSelect(name, value){
+    return '<select name="'+name+'">' +
+      '<option value=""'+(!value?" selected":"")+'>—</option>' +
+      FORMA_PAGAMENTO_OPTIONS.map(function(o){
+        return '<option value="'+o+'"'+(value===o?" selected":"")+'>'+o+'</option>';
+      }).join("") +
+      '</select>';
+  }
+  var STATUS_OPTIONS = [
+    {value:"realizado", label:"REALIZADO"},
+    {value:"aguardando_cotacao", label:"AGUARDANDO COTAÇÃO"},
+    {value:"aguardando_aprovacao", label:"AGUARDANDO APROVAÇÃO"}
+  ];
+  function isPend(t){ return t.status === "aguardando_cotacao" || t.status === "aguardando_aprovacao"; }
   function hasAereo(t){ return !!(t.aereo && t.aereo.tem && t.aereo.tem.toLowerCase().indexOf("não") !== 0); }
-  function statusLabel(t){ return t.statusDetalhe || (isPend(t) ? "Aguardando" : "OK"); }
+  function statusLabel(t){
+    var found = STATUS_OPTIONS.filter(function(o){ return o.value === t.status; })[0];
+    return t.statusDetalhe || (found ? found.label : (t.status||"").toUpperCase());
+  }
 
   function monthOptions(){
     var set = {};
@@ -706,7 +877,7 @@
       if(state.aereo === "com" && !hasAereo(t)) return false;
       if(state.aereo === "sem" && hasAereo(t)) return false;
       if(q){
-        var hay = [t.viajante, t.solicitacao, t.aereo && t.aereo.trecho, t.dataViagem]
+        var hay = [t.viajante, t.solicitacao, t.aereo && t.aereo.origem, t.aereo && t.aereo.destino, t.dataIda, t.dataVolta]
           .filter(Boolean).join(" ").toLowerCase();
         if(hay.indexOf(q) === -1) return false;
       }
@@ -764,15 +935,17 @@
     }
     empty.style.display = "none";
     tbody.innerHTML = list.map(function(t){
-      var pill = isPend(t)
-        ? '<span class="pill pend">'+ esc(statusLabel(t)) +'</span>'
-        : '<span class="pill ok">OK</span>';
+      var pillClass = t.status === "aguardando_aprovacao" ? "info" : (isPend(t) ? "pend" : "ok");
+      var pill = '<span class="pill '+ pillClass +'">'+ esc(statusLabel(t)) +'</span>';
       var aereoHasInfo = t.aereo && t.aereo.tem && t.aereo.tem.toLowerCase().indexOf("não") !== 0 && t.aereo.tem !== "Não";
       var aereoValueTxt = (t.aereo && (t.aereo.valor || t.aereo.fee))
         ? money(t.aereo.valor) + (t.aereo.fee? ' <span class="muted">(+'+money(t.aereo.fee)+' fee)</span>':'')
         : '<span class="muted" style="font-weight:600;">A cotar</span>';
+      var aereoRota = (t.aereo && (t.aereo.origem || t.aereo.destino))
+        ? [t.aereo.origem, t.aereo.destino].filter(Boolean).join(" ⇄ ")
+        : (t.aereo && t.aereo.tem) || "";
       var aereoTxt = aereoHasInfo
-        ? '<div class="route">'+ esc(t.aereo.trecho || t.aereo.tem) +'</div><div class="money tabular">'+ aereoValueTxt +'</div>'
+        ? '<div class="route">'+ esc(aereoRota) +'</div><div class="money tabular">'+ aereoValueTxt +'</div>'
         : '<span class="muted">—</span>';
       var hospHasInfo = t.hospedagem && t.hospedagem.tem && t.hospedagem.tem.toLowerCase().indexOf("não") === 0 ? false : (t.hospedagem && t.hospedagem.tem);
       var hospValueTxt = (t.hospedagem && t.hospedagem.valor)
@@ -784,7 +957,7 @@
       return '<tr data-id="'+ t.id +'">' +
         '<td>'+ pill +'</td>' +
         '<td><div class="via-name">'+ esc(t.viajante) +'</div><div class="sol-text">'+ esc(t.solicitacao) +'</div></td>' +
-        '<td>'+ esc(t.dataViagem) +'<div class="sol-text tabular">Solicitado '+ esc(t.dataCompra) +' · '+ esc(t.mes) +'</div></td>' +
+        '<td>Ida: '+ esc(t.dataIda||"—") +'<br>Volta: '+ esc(t.dataVolta||"—") +'<div class="sol-text tabular">Solicitado '+ esc(t.dataCompra) +' · '+ esc(t.mes) + (t.ano? "/"+esc(t.ano) : "") +'</div></td>' +
         '<td>'+ aereoTxt +'</td>' +
         '<td>'+ hospTxt +'</td>' +
         '<td class="money tabular">'+ money(t.valorFinal) + (t.obs ? ' <span title="'+esc(t.obs)+'" style="cursor:help;color:var(--amber);">⚑</span>' : '') +'</td>' +
@@ -827,9 +1000,11 @@
           '<div class="body">' +
             '<div class="detail-row"><span class="k">Status</span><span class="v">'+ esc(statusLabel(t)) +'</span></div>' +
             '<div class="detail-row"><span class="k">Solicitação</span><span class="v">'+ esc(t.solicitacao) +'</span></div>' +
-            '<div class="detail-row"><span class="k">Data da solicitação</span><span class="v">'+ esc(t.dataCompra) +' ('+ esc(t.mes) +')</span></div>' +
-            '<div class="detail-row"><span class="k">Datas da viagem</span><span class="v">'+ esc(t.dataViagem) +'</span></div>' +
-            '<div class="detail-row"><span class="k">Aéreo</span><span class="v">'+ esc((t.aereo&&t.aereo.trecho) || (t.aereo&&t.aereo.tem) || "—") +'</span></div>' +
+            '<div class="detail-row"><span class="k">Data da solicitação</span><span class="v">'+ esc(t.dataCompra) +' ('+ esc(t.mes) + (t.ano? "/"+esc(t.ano):"") +')</span></div>' +
+            '<div class="detail-row"><span class="k">Data de ida</span><span class="v">'+ esc(t.dataIda||"—") +'</span></div>' +
+            '<div class="detail-row"><span class="k">Data de volta</span><span class="v">'+ esc(t.dataVolta||"—") +'</span></div>' +
+            '<div class="detail-row"><span class="k">Origem</span><span class="v">'+ esc((t.aereo&&t.aereo.origem) || "—") +'</span></div>' +
+            '<div class="detail-row"><span class="k">Destino</span><span class="v">'+ esc((t.aereo&&t.aereo.destino) || "—") +'</span></div>' +
             '<div class="detail-row"><span class="k">Valor aéreo</span><span class="v tabular">'+ money(t.aereo&&t.aereo.valor) +' (fee '+ money(t.aereo&&t.aereo.fee) +')</span></div>' +
             '<div class="detail-row"><span class="k">Forma de pagamento (aéreo)</span><span class="v">'+ esc((t.aereo&&t.aereo.forma)||"—") +'</span></div>' +
             '<div class="detail-row"><span class="k">Hospedagem</span><span class="v">'+ esc((t.hospedagem&&t.hospedagem.detalhe) || (t.hospedagem&&t.hospedagem.tem) || "—") +'</span></div>' +
@@ -873,9 +1048,9 @@
   // ---------------------------------------------------------------
   function openForm(existing){
     var t = existing ? JSON.parse(JSON.stringify(existing)) : {
-      status:"ok", mes:"JULHO", dataCompra:"", solicitacao:"", viajante:"",
-      pax:{nome:"",cpf:"",nascimento:"",email:""}, dataViagem:"",
-      aereo:{tem:"Sim", trecho:"", valor:0, fee:19, forma:"Master 3x"},
+      status:"aguardando_cotacao", mes:"", ano:"", dataCompra:"", solicitacao:"", viajante:"",
+      pax:{nome:"",cpf:"",nascimento:"",email:""}, dataIda:"", dataVolta:"",
+      aereo:{tem:"Sim", origem:"", destino:"", valor:0, fee:19, forma:""},
       hospedagem:{tem:"Não", detalhe:"", valor:0, forma:""},
       valorFinal:0, obs:""
     };
@@ -895,23 +1070,30 @@
               '<div class="field-grid">' +
                 '<div class="field"><label>Viajante</label><input name="viajante" required value="'+esc(t.viajante)+'"></div>' +
                 '<div class="field"><label>Status</label><select name="status">' +
-                  '<option value="ok"'+(t.status==="ok"?" selected":"")+'>OK</option>' +
-                  '<option value="pend"'+(t.status==="pend"?" selected":"")+'>Pendente</option>' +
+                  STATUS_OPTIONS.map(function(o){
+                    return '<option value="'+o.value+'"'+(t.status===o.value?" selected":"")+'>'+o.label+'</option>';
+                  }).join("") +
                 '</select></div>' +
                 '<div class="field full"><label>Solicitação / observação da viagem</label><textarea name="solicitacao">'+esc(t.solicitacao)+'</textarea></div>' +
-                '<div class="field"><label>Mês da solicitação</label><input name="mes" value="'+esc(t.mes)+'" placeholder="JULHO"></div>' +
+                '<div class="field"><label>Mês da solicitação</label><select name="mes">' +
+                  '<option value=""'+(!t.mes?" selected":"")+'>—</option>' +
+                  MES_PT.map(function(m){ return '<option value="'+m+'"'+(t.mes===m?" selected":"")+'>'+m.charAt(0)+m.slice(1).toLowerCase()+'</option>'; }).join("") +
+                '</select></div>' +
+                '<div class="field"><label>Ano</label><input name="ano" value="'+esc(t.ano)+'" placeholder="2026"></div>' +
                 '<div class="field"><label>Data da solicitação/compra</label><input name="dataCompra" value="'+esc(t.dataCompra)+'" placeholder="DD/MM/AAAA"></div>' +
-                '<div class="field full"><label>Datas da viagem</label><input name="dataViagem" value="'+esc(t.dataViagem)+'" placeholder="Ida … · Volta …"></div>' +
+                '<div class="field"><label>Data de ida</label><input name="dataIda" value="'+esc(t.dataIda)+'" placeholder="DD/MM/AAAA ou livre"></div>' +
+                '<div class="field"><label>Data de volta</label><input name="dataVolta" value="'+esc(t.dataVolta)+'" placeholder="DD/MM/AAAA ou livre"></div>' +
               '</div>' +
             '</fieldset>' +
 
             '<fieldset><legend>Aéreo</legend>' +
               '<div class="field-grid">' +
                 '<div class="field"><label>Situação</label><input name="aereoTem" value="'+esc(t.aereo.tem)+'" placeholder="Sim / Não"></div>' +
-                '<div class="field"><label>Trecho</label><input name="aereoTrecho" value="'+esc(t.aereo.trecho)+'"></div>' +
+                '<div class="field"><label>Origem</label><input name="aereoOrigem" value="'+esc(t.aereo.origem)+'"></div>' +
+                '<div class="field"><label>Destino</label><input name="aereoDestino" value="'+esc(t.aereo.destino)+'"></div>' +
                 '<div class="field"><label>Valor (R$)</label><input name="aereoValor" id="fldAereoValor" type="number" step="0.01" value="'+ (t.aereo.valor||0) +'"></div>' +
                 '<div class="field"><label>Fee agência (R$)</label><input name="aereoFee" id="fldAereoFee" type="number" step="0.01" value="'+ (t.aereo.fee||0) +'"></div>' +
-                '<div class="field full"><label>Forma de pagamento</label><input name="aereoForma" value="'+esc(t.aereo.forma)+'"></div>' +
+                '<div class="field full"><label>Forma de pagamento</label>'+formaPagamentoSelect("aereoForma", t.aereo.forma)+'</div>' +
               '</div>' +
             '</fieldset>' +
 
@@ -920,7 +1102,7 @@
                 '<div class="field"><label>Situação</label><input name="hospTem" value="'+esc(t.hospedagem.tem)+'" placeholder="Sim / Não"></div>' +
                 '<div class="field"><label>Detalhe / local</label><input name="hospDetalhe" value="'+esc(t.hospedagem.detalhe)+'"></div>' +
                 '<div class="field"><label>Valor (R$)</label><input name="hospValor" id="fldHospValor" type="number" step="0.01" value="'+ (t.hospedagem.valor||0) +'"></div>' +
-                '<div class="field full"><label>Faturamento</label><input name="hospForma" value="'+esc(t.hospedagem.forma)+'"></div>' +
+                '<div class="field full"><label>Forma de pagamento</label>'+formaPagamentoSelect("hospForma", t.hospedagem.forma)+'</div>' +
               '</div>' +
             '</fieldset>' +
 
@@ -977,17 +1159,19 @@
         status: f.get("status"),
         statusDetalhe: existing ? existing.statusDetalhe : "",
         mes: (f.get("mes")||"").toUpperCase(),
+        ano: f.get("ano"),
         dataCompra: f.get("dataCompra"),
         solicitacao: f.get("solicitacao"),
         viajante: f.get("viajante"),
-        dataViagem: f.get("dataViagem"),
+        dataIda: f.get("dataIda"),
+        dataVolta: f.get("dataVolta"),
         pax:{
           nome: f.get("paxNome"), cpf: f.get("paxCpf"),
           nascimento: f.get("paxNasc"), email: f.get("paxEmail"),
           telefone: f.get("paxTelefone")
         },
         aereo:{
-          tem: f.get("aereoTem"), trecho: f.get("aereoTrecho"),
+          tem: f.get("aereoTem"), origem: f.get("aereoOrigem"), destino: f.get("aereoDestino"),
           valor: parseFloat(f.get("aereoValor"))||0, fee: parseFloat(f.get("aereoFee"))||0,
           forma: f.get("aereoForma")
         },
@@ -1004,9 +1188,12 @@
       } else {
         trips.push(rec);
       }
-      save(trips);
       closeModal();
       renderAll();
+      upsertTrip(rec).catch(function(err){
+        console.error("[Supabase] falha ao salvar viagem:", err);
+        alert("A viagem foi salva na tela, mas não foi possível gravar no Supabase.\n\n" + err.message);
+      });
     });
   }
 
@@ -1025,8 +1212,11 @@
     if(btn.dataset.act === "del"){
       if(confirm('Excluir a viagem de "'+t.viajante+'" ('+t.solicitacao+')? Essa ação não pode ser desfeita.')){
         trips = trips.filter(function(x){ return x.id !== id; });
-        save(trips);
         renderAll();
+        deleteTripRemote(id).catch(function(err){
+          console.error("[Supabase] falha ao excluir viagem:", err);
+          alert("A viagem foi removida da tela, mas não foi possível excluir no Supabase.\n\n" + err.message);
+        });
       }
     }
   });
@@ -1039,7 +1229,12 @@
     var t = trips.find(function(x){ return x.id === id; });
     if(!t) return;
     t.pagamentoFaturaFeito = box.checked;
-    save(trips);
+    patchTrip(id, { pagamento_fatura_feito: box.checked }).catch(function(err){
+      console.error("[Supabase] falha ao salvar pagamento:", err);
+      box.checked = !box.checked;
+      t.pagamentoFaturaFeito = box.checked;
+      alert("Não foi possível salvar essa marcação no Supabase.\n\n" + err.message);
+    });
   });
 
   document.getElementById("btnNew").addEventListener("click", function(){ openForm(null); });
@@ -1062,10 +1257,15 @@
   });
 
   document.getElementById("btnReset").addEventListener("click", function(){
-    if(confirm("Isso vai substituir todos os dados atuais pelos dados originais da planilha (julho–agosto/2026). Continuar?")){
-      trips = seedWithIds();
-      save(trips);
-      renderAll();
+    if(confirm("Isso vai substituir todos os dados atuais (no Supabase, pra todo mundo) pelos dados originais da planilha (julho–agosto/2026). Continuar?")){
+      var novo = seedWithIds();
+      replaceAllTrips(novo).then(function(){
+        trips = novo;
+        renderAll();
+      }).catch(function(err){
+        console.error("[Supabase] falha ao restaurar dados:", err);
+        alert("Não foi possível restaurar os dados no Supabase.\n\n" + err.message);
+      });
     }
   });
 
@@ -1088,10 +1288,15 @@
       try{
         var data = JSON.parse(reader.result);
         if(!Array.isArray(data)) throw new Error("formato inválido");
-        if(confirm("Importar "+ data.length +" viagem(ns)? Isso substitui os dados atuais.")){
-          trips = data.map(function(t){ if(!t.id) t.id = uid(); return t; });
-          save(trips);
-          renderAll();
+        if(confirm("Importar "+ data.length +" viagem(ns)? Isso substitui os dados atuais no Supabase, pra todo mundo.")){
+          var novo = data.map(function(t){ if(!t.id) t.id = uid(); return t; });
+          replaceAllTrips(novo).then(function(){
+            trips = novo;
+            renderAll();
+          }).catch(function(err){
+            console.error("[Supabase] falha ao importar backup:", err);
+            alert("Não foi possível importar os dados no Supabase.\n\n" + err.message);
+          });
         }
       }catch(err){
         alert("Não foi possível ler este arquivo como backup válido: " + err.message);
@@ -1107,14 +1312,14 @@
     return v;
   }
   document.getElementById("btnExportCsv").addEventListener("click", function(){
-    var cols = ["Status","Mês","Data solicitação","Solicitação","Viajante","Datas viagem",
-      "Trecho aéreo","Valor aéreo","Fee aéreo","Forma pgto aéreo","Hospedagem","Valor hospedagem",
-      "Faturamento hospedagem","Valor final","Pagamento da fatura referente feito","Observações"];
+    var cols = ["Status","Mês","Ano","Data solicitação","Solicitação","Viajante","Data de ida","Data de volta",
+      "Origem aéreo","Destino aéreo","Valor aéreo","Fee aéreo","Forma pgto aéreo","Hospedagem","Valor hospedagem",
+      "Forma pgto hospedagem","Valor final","Pagamento da fatura referente feito","Observações"];
     var rows = [cols.join(";")];
     filtered().forEach(function(t){
       rows.push([
-        statusLabel(t), t.mes, t.dataCompra, t.solicitacao, t.viajante, t.dataViagem,
-        (t.aereo&&t.aereo.trecho)||"", (t.aereo&&t.aereo.valor)||0, (t.aereo&&t.aereo.fee)||0, (t.aereo&&t.aereo.forma)||"",
+        statusLabel(t), t.mes, t.ano||"", t.dataCompra, t.solicitacao, t.viajante, t.dataIda||"", t.dataVolta||"",
+        (t.aereo&&t.aereo.origem)||"", (t.aereo&&t.aereo.destino)||"", (t.aereo&&t.aereo.valor)||0, (t.aereo&&t.aereo.fee)||0, (t.aereo&&t.aereo.forma)||"",
         (t.hospedagem&&t.hospedagem.detalhe)||(t.hospedagem&&t.hospedagem.tem)||"", (t.hospedagem&&t.hospedagem.valor)||0,
         (t.hospedagem&&t.hospedagem.forma)||"", t.valorFinal, (t.pagamentoFaturaFeito? "Sim":"Não"), t.obs||""
       ].map(csvEscape).join(";"));
@@ -1131,7 +1336,7 @@
   // tela (a tabela impressa é a mesma que já está filtrada visualmente).
   document.getElementById("btnExportPdf").addEventListener("click", function(){
     var filtrosTxt = [];
-    filtrosTxt.push("Status: " + (state.status === "todos" ? "Todos" : state.status === "ok" ? "OK" : "Pendentes"));
+    filtrosTxt.push("Status: " + (state.status === "todos" ? "Todos" : (STATUS_OPTIONS.filter(function(o){return o.value===state.status;})[0]||{}).label || state.status));
     filtrosTxt.push("Mês: " + (state.mes === "todos" ? "Todos" : state.mes));
     filtrosTxt.push("Aéreo: " + (state.aereo === "todos" ? "Todos" : state.aereo === "com" ? "Com aéreo" : "Sem aéreo"));
     if(state.search.trim()) filtrosTxt.push('Busca: "' + state.search.trim() + '"');
@@ -1161,6 +1366,11 @@
     var m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
     if(!m) return "";
     return MES_PT[(+m[2]) - 1] || "";
+  }
+  function anoFromISO(iso){
+    if(!iso) return "";
+    var m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    return m ? m[1] : "";
   }
   function isConfigured(){
     return SCRIPT_URL && SCRIPT_URL.indexOf("REPLACE_WITH") !== 0;
@@ -1195,9 +1405,8 @@
   }
 
   function formRowToTrip(row){
-    var viagemParts = [];
-    if(row.departureDate) viagemParts.push("Ida " + isoToBR(row.departureDate) + (row.departureTime? " "+row.departureTime:""));
-    if(row.returnDate) viagemParts.push("Volta " + isoToBR(row.returnDate) + (row.returnTime? " "+row.returnTime:""));
+    var dataIda = row.departureDate ? isoToBR(row.departureDate) + (row.departureTime? " "+row.departureTime:"") : "";
+    var dataVolta = row.returnDate ? isoToBR(row.returnDate) + (row.returnTime? " "+row.returnTime:"") : "";
 
     // O formulário agora pergunta direto "Precisa de Passagem Aérea?" e
     // "Precisa de Hotel?" (Sim/Não) — espelha exatamente essa resposta.
@@ -1208,9 +1417,10 @@
       ? row.needsFlight === "Sim"
       : (!isBlankOrNao(row.originCity) && !isBlankOrNao(row.destinationCity));
 
-    var trecho = precisaAereo
-      ? [row.originCity, row.destinationCity].filter(Boolean).join(" ⇄ ") + (row.originAirport && !isBlankOrNao(row.originAirport) ? " (" + row.originAirport + ")" : "")
+    var origem = precisaAereo
+      ? (row.originCity || "") + (row.originAirport && !isBlankOrNao(row.originAirport) ? " (" + row.originAirport + ")" : "")
       : "";
+    var destino = precisaAereo ? (row.destinationCity || "") : "";
 
     var hospParts = [];
     if(row.locationPreference) hospParts.push("Localização: " + row.locationPreference);
@@ -1242,17 +1452,18 @@
     return {
       id: uid(),
       formId: row.id,
-      status: "pend",
-      statusDetalhe: "Aguardando cotação",
+      status: "aguardando_cotacao",
       mes: mesFromISO(row.departureDate) || mesFromISO(row.timestamp) || "",
+      ano: anoFromISO(row.departureDate) || anoFromISO(row.timestamp) || "",
       dataCompra: isoToBR(row.timestamp) || isoToBR(row.departureDate) || "",
       solicitacao: solicitacao,
       viajante: row.fullName || "(sem nome)",
-      dataViagem: viagemParts.join(" · "),
+      dataIda: dataIda,
+      dataVolta: dataVolta,
       pax:{ nome: row.fullName || "", cpf: row.cpf || "", nascimento: isoToBR(row.birthDate), email: row.email || "", telefone: row.phone || "" },
       aereo: precisaAereo
-        ? {tem:"A cotar", trecho: trecho, valor: 0, fee: 0, forma: ""}
-        : {tem:"Não", trecho: "", valor: 0, fee: 0, forma: ""},
+        ? {tem:"A cotar", origem: origem, destino: destino, valor: 0, fee: 0, forma: ""}
+        : {tem:"Não", origem: "", destino: "", valor: 0, fee: 0, forma: ""},
       hospedagem: precisaHotel
         ? {tem:"A cotar", detalhe: hospParts.join(" · "), valor: 0, forma: ""}
         : {tem:"Não", detalhe: "", valor: 0, forma: ""},
@@ -1283,13 +1494,16 @@
 
         var novos = items.filter(function(row){ return !importedSet[row.id]; });
         if(novos.length){
-          novos.forEach(function(row){
-            trips.push(formRowToTrip(row));
+          var novosTrips = novos.map(function(row){
             imported.push(row.id);
+            return formRowToTrip(row);
           });
-          save(trips);
+          trips = trips.concat(novosTrips);
           saveImportedIds(imported);
           renderAll();
+          upsertTrips(novosTrips).catch(function(err){
+            console.error("[Supabase] falha ao gravar solicitações sincronizadas:", err);
+          });
         }
         if(!opts.silent){
           alert(novos.length
@@ -1311,11 +1525,22 @@
   document.getElementById("btnSync").addEventListener("click", function(){ syncFromForm({silent:false}); });
 
   function startApp(){
-    renderAll();
-    syncFromForm({silent:true});
-    // Enquanto esta aba estiver aberta, verifica sozinho a cada 60s — não
-    // depende de a pessoa lembrar de clicar em "Sincronizar solicitações".
-    setInterval(function(){ syncFromForm({silent:true}); }, 60000);
+    document.getElementById("kpis").innerHTML = '<div class="kpi"><div class="label">Carregando</div><div class="value tabular">…</div><div class="hint">buscando dados do Supabase</div></div>';
+    loadTrips()
+      .then(function(rows){
+        trips = rows;
+        renderAll();
+        syncFromForm({silent:true});
+        // Enquanto esta aba estiver aberta, verifica sozinho a cada 60s — não
+        // depende de a pessoa lembrar de clicar em "Sincronizar solicitações".
+        setInterval(function(){ syncFromForm({silent:true}); }, 60000);
+      })
+      .catch(function(err){
+        console.error("[Supabase] falha ao carregar viagens:", err);
+        document.getElementById("kpis").innerHTML =
+          '<div class="kpi" style="grid-column:1/-1;"><div class="label">Erro ao carregar dados</div>' +
+          '<div class="hint">Não foi possível conectar ao Supabase. Detalhe: ' + esc(err.message) + '</div></div>';
+      });
   }
 
   // ---------------------------------------------------------------
