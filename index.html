@@ -840,7 +840,7 @@
     if(!m) return 0;
     return new Date(+m[3], +m[2]-1, +m[1]).getTime();
   }
-  var FORMA_PAGAMENTO_OPTIONS = ["Cartão em 3x", "Faturado"];
+  var FORMA_PAGAMENTO_OPTIONS = ["Cartão em 3x", "Faturado", "Pago pelo passageiro - via reembolso"];
   function formaPagamentoSelect(name, value){
     return '<select name="'+name+'">' +
       '<option value=""'+(!value?" selected":"")+'>—</option>' +
