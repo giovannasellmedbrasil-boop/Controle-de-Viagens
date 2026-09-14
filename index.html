@@ -334,8 +334,8 @@
   // lado do banco), mas ainda assim o acesso à tabela fica liberado pra
   // qualquer um que extrair essa chave do código-fonte — a única barreira
   // real aqui é a tela de senha abaixo + a proteção do próprio Vercel.
-  var SUPABASE_URL = "";  // removido nesta cópia pública -- ver README
-  var SUPABASE_ANON_KEY = "";  // removido nesta cópia pública -- ver README
+  var SUPABASE_URL = ""; // removido nesta cópia pública -- ver README
+  var SUPABASE_ANON_KEY = ""; // removido nesta cópia pública -- ver README
   var SUPABASE_TABLE = SUPABASE_URL + "/rest/v1/viagens";
   // Mesma URL do Google Apps Script usada pelo formulário em
   // solicitacao-viagem-app/assets/app.js — precisa do endpoint "?action=list"
@@ -407,7 +407,7 @@
      valorFinal:2271.17, obs:"", pagamentoFaturaFeito:false},
 
     {status:"realizado", mes:"JUNHO", dataCompra:"25/06/2026", solicitacao:"Solicitação da Dani para um especialista",
-     viajante:"Járede Pereira", pax:{cpf:"", nascimento:""}, dataViagem:"Ida 03/07 manhã · Volta 04/07 noite",
+     viajante:"Járede Pereira", pax:{}, dataViagem:"Ida 03/07 manhã · Volta 04/07 noite",
      aereo:{tem:"Sim", trecho:"SP ⇄ Curitiba", valor:1460.40, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"Guarapuava", valor:255.00, forma:"Faturado — fatura 01/07, venc. 11/07"},
      valorFinal:1734.40, obs:"", pagamentoFaturaFeito:false},
@@ -486,7 +486,7 @@
      valorFinal:3518.26, obs:"", pagamentoFaturaFeito:false},
 
     {status:"realizado", mes:"JULHO", dataCompra:"16/07/2026", solicitacao:"Aéreo SP (Campinas)–RJ, domingo dia 26 final da tarde, volta dia 28 após 15h + hospedagem Novotel Parque Olímpico (26 a 28)",
-     viajante:"Jarede Pereira", pax:{cpf:"", nascimento:"", email:""}, dataViagem:"",
+     viajante:"Jarede Pereira", pax:{}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"SP (Campinas) ⇄ RJ", valor:2766.75, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"Novotel Parque Olímpico", valor:1466.19, forma:"Emissões 11–20/07 — fatura 21/07, venc. 01/08"},
      valorFinal:4251.94, obs:"", pagamentoFaturaFeito:false},
@@ -498,115 +498,115 @@
      valorFinal:5251.09, obs:"", pagamentoFaturaFeito:false},
 
     {status:"realizado", mes:"JULHO", dataCompra:"18/07/2026", solicitacao:"Aéreo ida SOLACI e treinamento Rio — 24/07 Maceió→Rio (manhã), 28/07 Rio→SP (noite). Hospedagem junto com Dani Delfina (valor na linha dela).",
-     viajante:"Alice Moraes", pax:{nome:"Alice Souza de Moraes Maciel", email:"", nascimento:"", cpf:""}, dataViagem:"",
+     viajante:"Alice Moraes", pax:{nome:"Alice Souza de Moraes Maciel"}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"Maceió → Rio → SP", valor:2814.34, fee:57, forma:"Master 3x"},
      hospedagem:{tem:"Não", detalhe:"", valor:0, forma:""},
      valorFinal:2871.34, obs:"Hospedagem conjunta com Dani Delfina — valor lançado no registro dela.", pagamentoFaturaFeito:false},
 
     {status:"realizado", mes:"JULHO", dataCompra:"18/07/2026", solicitacao:"Aéreo volta SOLACI — 31/07 SP→Maceió, fim da tarde ou noite",
-     viajante:"Alice Moraes", pax:{nome:"Alice Souza de Moraes Maciel", email:"", nascimento:"", cpf:""}, dataViagem:"",
+     viajante:"Alice Moraes", pax:{nome:"Alice Souza de Moraes Maciel"}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"SP ⇄ Maceió", valor:461.53, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Não", detalhe:"", valor:0, forma:""},
      valorFinal:480.53, obs:"", pagamentoFaturaFeito:false},
 
     {status:"realizado", mes:"JULHO", dataCompra:"20/07/2026", solicitacao:"Aéreo e hospedagem Rio 26 a 28 (LATAM, preferência Congonhas 1º voo) — Hotel Ariane",
-     viajante:"Ariane Sanchez Nunes Salles", pax:{cpf:"", email:"", nascimento:""}, dataViagem:"",
+     viajante:"Ariane Sanchez Nunes Salles", pax:{}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"SP ⇄ RJ", valor:1917.83, fee:38, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"", valor:403.87, forma:"Emissões 11–20/07 — fatura 21/07, venc. 01/08"},
      valorFinal:2359.70, obs:"", pagamentoFaturaFeito:false},
 
     {status:"realizado", mes:"JULHO", dataCompra:"20/07/2026", solicitacao:"Aéreo e hospedagem Rio 26 a 28 — Hotel Dr. Leonardo",
-     viajante:"Leonardo Giglio Dragone", pax:{cpf:"", email:"", nascimento:""}, dataViagem:"",
+     viajante:"Leonardo Giglio Dragone", pax:{}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"SP ⇄ RJ", valor:1917.83, fee:38, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"", valor:403.87, forma:"Emissões 11–20/07 — fatura 21/07, venc. 01/08"},
      valorFinal:2359.70, obs:"", pagamentoFaturaFeito:false},
 
     {status:"realizado", mes:"JULHO", dataCompra:"21/07/2026", solicitacao:"Aéreo e hospedagem Rio 26 a 28 — Hotel Dr. Bruno",
-     viajante:"Bruno Silva Ribeiro", pax:{cpf:"", email:"", nascimento:""}, dataViagem:"",
+     viajante:"Bruno Silva Ribeiro", pax:{}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"SP ⇄ RJ", valor:2416.59, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"", valor:390.28, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
      valorFinal:2825.87, obs:"", pagamentoFaturaFeito:false},
 
     {status:"realizado", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Aéreo Recife - Rio",
-     viajante:"Dani Delfina", pax:{nome:"Daniela Delfina dos Santos Souza", cpf:"", nascimento:"", email:""}, dataViagem:"",
+     viajante:"Dani Delfina", pax:{nome:"Daniela Delfina dos Santos Souza"}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"Recife ⇄ Rio", valor:1435.02, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Não", detalhe:"", valor:0, forma:""},
      valorFinal:1454.02, obs:"", pagamentoFaturaFeito:false},
 
     {status:"realizado", mes:"JULHO", dataCompra:"21/07/2026", solicitacao:"Hospedagem Rio 26 a 28 (Dani Delfina + Alice)",
-     viajante:"Dani Delfina", pax:{nome:"Daniela Delfina dos Santos Souza", cpf:"", nascimento:"", email:""}, dataViagem:"",
+     viajante:"Dani Delfina", pax:{nome:"Daniela Delfina dos Santos Souza"}, dataViagem:"",
      aereo:{tem:"Não", trecho:"", valor:0, fee:0, forma:""},
      hospedagem:{tem:"Sim", detalhe:"", valor:1047.08, forma:"Faturado — emissões 21–30/31, fatura 01/09, venc. 11/08"},
      valorFinal:1047.08, obs:"Quarto dividido com Alice Moraes.", pagamentoFaturaFeito:false},
 
     {status:"realizado", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Aéreo Rio - SP",
-     viajante:"Dani Delfina", pax:{nome:"Daniela Delfina dos Santos Souza", cpf:"", nascimento:"", email:""}, dataViagem:"",
+     viajante:"Dani Delfina", pax:{nome:"Daniela Delfina dos Santos Souza"}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"Rio ⇄ SP", valor:2932.91, fee:19, forma:"Faturado — emissões 21–30/31, fatura 01/09, venc. 11/08"},
      hospedagem:{tem:"Não", detalhe:"", valor:0, forma:""},
      valorFinal:2951.91, obs:"A planilha também menciona um trecho SP→Recife em 31/07 (precisa ser cedo) na mesma solicitação, sem valor discriminado.", pagamentoFaturaFeito:false},
 
     {status:"realizado", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Hospedagem SP SOLACI 28 a 31 (quarto dividido com Alice)",
-     viajante:"Dani Delfina", pax:{nome:"Daniela Delfina dos Santos Souza", cpf:"", nascimento:"", email:""}, dataViagem:"",
+     viajante:"Dani Delfina", pax:{nome:"Daniela Delfina dos Santos Souza"}, dataViagem:"",
      aereo:{tem:"Não", trecho:"", valor:0, fee:0, forma:""},
      hospedagem:{tem:"Sim", detalhe:"", valor:1602.92, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
      valorFinal:1602.92, obs:"", pagamentoFaturaFeito:false},
 
     {status:"realizado", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Hospedagem SP SOLACI 29 a 30 (quarto dividido com Jarede)",
-     viajante:"Daniele Lopes", pax:{nome:"Daniele Caroline Lopes", cpf:"", nascimento:"", email:""}, dataViagem:"",
+     viajante:"Daniele Lopes", pax:{nome:"Daniele Caroline Lopes"}, dataViagem:"",
      aereo:{tem:"Não", trecho:"", valor:0, fee:0, forma:""},
      hospedagem:{tem:"Sim", detalhe:"", valor:1150.43, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
-     valorFinal:1150.43, obs:"Quarto dividido com Jarede Pereira.", pagamentoFaturaFeito:false},
+     valorFinal:1150.43, obs:"Quarto dividido com Jarede Pereira (CPF [CPF removido]).", pagamentoFaturaFeito:false},
 
     {status:"realizado", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Aéreo e hospedagem SOLACI (vem de Recife)",
-     viajante:"Thyally Rayssa", pax:{nome:"Thyally Rayssa Ribeiro da Silva", cpf:"", nascimento:"", email:""}, dataViagem:"",
+     viajante:"Thyally Rayssa", pax:{nome:"Thyally Rayssa Ribeiro da Silva"}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"Recife ⇄ SP", valor:1350.46, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"", valor:1602.92, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
      valorFinal:2972.38, obs:"", pagamentoFaturaFeito:false},
 
     {status:"realizado", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Aéreo e hospedagem SOLACI SBCHI (quarto dividido entre os 2)",
-     viajante:"Andre Sales", pax:{nome:"Andre Luiz Cavalcanti Dias Sales", cpf:"", nascimento:"", email:""}, dataViagem:"",
+     viajante:"Andre Sales", pax:{nome:"Andre Luiz Cavalcanti Dias Sales"}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"Recife ⇄ SP", valor:1350.46, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"", valor:1602.92, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
      valorFinal:2972.38, obs:"A planilha soma R$ 4.341,84 nesta linha, aparentemente somando também o trecho aéreo do Erick Vieira (quarto dividido entre os dois). Valor aqui reflete apenas os itens do André — conferir fatura.", pagamentoFaturaFeito:false},
 
     {status:"realizado", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Aéreo SOLACI SBCHI (quarto dividido com André)",
-     viajante:"Erick Vieira", pax:{nome:"Erick Gomes Vieira de Melo", cpf:"", nascimento:"", email:""}, dataViagem:"",
+     viajante:"Erick Vieira", pax:{nome:"Erick Gomes Vieira de Melo"}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"Recife ⇄ SP", valor:1350.46, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim (custo lançado no registro de André Sales)", detalhe:"", valor:0, forma:""},
      valorFinal:1369.46, obs:"Hospedagem compartilhada com André Sales — custo lançado na linha dele.", pagamentoFaturaFeito:false},
 
     {status:"realizado", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Aéreo e hospedagem SOLACI SBCHI (Eudes e Luciano, mesmo voo, preferência Congonhas, mesmo quarto)",
-     viajante:"Eudes Figueredo", pax:{nome:"Eudes Santos de Figueredo", cpf:"", nascimento:"", email:""}, dataViagem:"",
+     viajante:"Eudes Figueredo", pax:{nome:"Eudes Santos de Figueredo"}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"Recife ⇄ SP", valor:1350.46, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"", valor:1602.92, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
      valorFinal:2972.38, obs:"A planilha soma R$ 6.063,10 nesta linha, aparentemente somando também o trecho aéreo do Luciano Neves (quarto dividido entre os dois). Valor aqui reflete apenas os itens do Eudes — conferir fatura.", pagamentoFaturaFeito:false},
 
     {status:"realizado", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Aéreo SOLACI SBCHI (mesmo quarto que Eudes)",
-     viajante:"Luciano Neves", pax:{nome:"Luciano Alves das Neves", cpf:"", nascimento:"", email:""}, dataViagem:"",
+     viajante:"Luciano Neves", pax:{nome:"Luciano Alves das Neves"}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"Recife ⇄ SP", valor:3071.72, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim (custo lançado no registro de Eudes Figueredo)", detalhe:"", valor:0, forma:""},
      valorFinal:3090.72, obs:"Hospedagem compartilhada com Eudes Figueredo — custo lançado na linha dele.", pagamentoFaturaFeito:false},
 
     {status:"realizado", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"BH - SP SOLACI SBCHI",
-     viajante:"Valdiene Carvalho", pax:{cpf:"", nascimento:"", email:""}, dataViagem:"",
+     viajante:"Valdiene Carvalho", pax:{}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"BH ⇄ SP", valor:1290.10, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"", valor:1602.00, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
      valorFinal:2911.10, obs:"A planilha soma R$ 5.152,39 nesta linha, aparentemente somando também o trecho aéreo da Elaine Moya. Valor aqui reflete apenas os itens da Valdiene — conferir fatura.", pagamentoFaturaFeito:false},
 
     {status:"realizado", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"RJ - SP SOLACI SBCHI",
-     viajante:"Elaine Moya", pax:{nome:"Elaine Cristina Saldanha Moya", cpf:"", nascimento:"", email:""}, dataViagem:"",
+     viajante:"Elaine Moya", pax:{nome:"Elaine Cristina Saldanha Moya"}, dataViagem:"",
      aereo:{tem:"Sim", trecho:"RJ ⇄ SP", valor:1847.29, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Não informado nesta linha", detalhe:"", valor:0, forma:""},
      valorFinal:1866.29, obs:"Hospedagem não discriminada nesta linha; a planilha soma R$ 5.153,31 junto com a linha da Valdiene Carvalho.", pagamentoFaturaFeito:false},
 
     {status:"realizado", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Hotel próximo ao Congresso SOLACI (check-in 30/07, check-out 31/07)",
-     viajante:"Micheli Aparecida dos Santos", pax:{cpf:"", rg:"", nascimento:""}, dataViagem:"",
+     viajante:"Micheli Aparecida dos Santos", pax:{}, dataViagem:"",
      aereo:{tem:"Não", trecho:"", valor:0, fee:0, forma:""},
      hospedagem:{tem:"Sim", detalhe:"", valor:558.71, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
      valorFinal:558.71, obs:"Quarto dividido com Natasha Fonseca Moura Cavalcanti.", pagamentoFaturaFeito:false},
 
     {status:"realizado", mes:"JULHO", dataCompra:"21/07/2026", solicitacao:"Aéreo ida — Guarulhos para Rondônia",
-     viajante:"Ana Paula Ferreira da Silva", pax:{cpf:"", nascimento:"", email:""}, dataViagem:"31/07",
+     viajante:"Ana Paula Ferreira da Silva", pax:{}, dataViagem:"31/07",
      aereo:{tem:"Sim", trecho:"SP ⇄ Rondônia", valor:1524.76, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Não", detalhe:"", valor:0, forma:""},
      valorFinal:1543.76, obs:"", pagamentoFaturaFeito:false},
@@ -618,55 +618,55 @@
      valorFinal:6299.23, obs:"", pagamentoFaturaFeito:false},
 
     {status:"realizado", mes:"JULHO", dataCompra:"30/07/2026", solicitacao:"Congresso Mundial de Cardiologia no Rio de Janeiro — Riocentro, Barra Olímpica. Ida quarta-feira manhã cedo (7/10), volta sábado à noite (10/10). Dois quartos de hotel.",
-     viajante:"Nelson Fernando Eugênio Hurtado", pax:{cpf:"", nascimento:""}, dataViagem:"Ida 7/10 · Volta 10/10",
+     viajante:"Nelson Fernando Eugênio Hurtado", pax:{}, dataViagem:"Ida 7/10 · Volta 10/10",
      aereo:{tem:"Sim", trecho:"Recife ⇄ RJ", valor:1744.25, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"", valor:755.64, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
      valorFinal:2518.89, obs:"Viagem em grupo (4 pessoas) para o Congresso Mundial de Cardiologia.", pagamentoFaturaFeito:false},
 
     {status:"realizado", mes:"JULHO", dataCompra:"30/07/2026", solicitacao:"Congresso Mundial de Cardiologia no Rio de Janeiro — mesma viagem do grupo (ver registro de Nelson Hurtado)",
-     viajante:"Ariana Nicol Eugênio Vela", pax:{cpf:"", nascimento:""}, dataViagem:"Ida 7/10 · Volta 10/10",
+     viajante:"Ariana Nicol Eugênio Vela", pax:{}, dataViagem:"Ida 7/10 · Volta 10/10",
      aereo:{tem:"Sim", trecho:"Recife ⇄ RJ", valor:1744.25, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"", valor:755.64, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
      valorFinal:2518.89, obs:"Viagem em grupo (4 pessoas) para o Congresso Mundial de Cardiologia.", pagamentoFaturaFeito:false},
 
     {status:"realizado", mes:"JULHO", dataCompra:"30/07/2026", solicitacao:"Congresso Mundial de Cardiologia no Rio de Janeiro — mesma viagem do grupo (ver registro de Nelson Hurtado)",
-     viajante:"Miguel Angel Eugênio Vela", pax:{cpf:"", nascimento:""}, dataViagem:"Ida 7/10 · Volta 10/10",
+     viajante:"Miguel Angel Eugênio Vela", pax:{}, dataViagem:"Ida 7/10 · Volta 10/10",
      aereo:{tem:"Sim", trecho:"Recife ⇄ RJ", valor:1744.25, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"", valor:755.64, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
      valorFinal:2518.89, obs:"Viagem em grupo (4 pessoas) para o Congresso Mundial de Cardiologia.", pagamentoFaturaFeito:false},
 
     {status:"realizado", mes:"JULHO", dataCompra:"30/07/2026", solicitacao:"Congresso Mundial de Cardiologia no Rio de Janeiro — mesma viagem do grupo (ver registro de Nelson Hurtado)",
-     viajante:"Christian Augusto Montesinos Calleja", pax:{cpf:"", nascimento:""}, dataViagem:"Ida 7/10 · Volta 10/10",
+     viajante:"Christian Augusto Montesinos Calleja", pax:{}, dataViagem:"Ida 7/10 · Volta 10/10",
      aereo:{tem:"Sim", trecho:"Recife ⇄ RJ", valor:1744.25, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"", valor:755.64, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
      valorFinal:2518.89, obs:"Viagem em grupo (4 pessoas) para o Congresso Mundial de Cardiologia.", pagamentoFaturaFeito:false},
 
     {status:"realizado", mes:"AGOSTO", dataCompra:"04/08/2026", solicitacao:"SP (GRU) - Recife. Ida 10/08/26 (7h), volta 13/08/26 (17h). Hotel próximo ao escritório da Sellmed.",
-     viajante:"Gislene Brito de Souza", pax:{cpf:"", nascimento:"", email:"", telefone:""}, dataViagem:"Ida 10/08 · Volta 13/08",
+     viajante:"Gislene Brito de Souza", pax:{}, dataViagem:"Ida 10/08 · Volta 13/08",
      aereo:{tem:"Sim", trecho:"SP (GRU) ⇄ Recife", valor:3438.75, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"Próximo ao escritório da Sellmed", valor:1041.70, forma:"Faturado — emissões 1–10, fatura dia 11, venc. dia 21"},
      valorFinal:4499.45, obs:"", pagamentoFaturaFeito:false},
 
     {status:"realizado", mes:"AGOSTO", dataCompra:"06/08/2026", solicitacao:"Hotel em Ribeirão Preto",
-     viajante:"Jarede Pereira", pax:{cpf:"", nascimento:"", email:""}, dataViagem:"",
+     viajante:"Jarede Pereira", pax:{}, dataViagem:"",
      aereo:{tem:"Não", trecho:"", valor:0, fee:0, forma:""},
      hospedagem:{tem:"Sim", detalhe:"", valor:283.80, forma:"Faturado — emissões 1–10, fatura dia 11, venc. dia 21"},
      valorFinal:283.80, obs:"", pagamentoFaturaFeito:false},
 
     {status:"realizado", mes:"AGOSTO", dataCompra:"06/08/2026", solicitacao:"Recife - Fortaleza. Ida 11/08 à tarde, volta 14/08 após o almoço. Hotel 11 a 14/08.",
-     viajante:"Luciano Neves", pax:{nome:"Luciano Alves das Neves", cpf:"", nascimento:"", email:""}, dataViagem:"Ida 11/08 · Volta 14/08",
+     viajante:"Luciano Neves", pax:{nome:"Luciano Alves das Neves"}, dataViagem:"Ida 11/08 · Volta 14/08",
      aereo:{tem:"Sim", trecho:"Recife ⇄ Fortaleza", valor:2128.42, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"", valor:673.11, forma:"Faturado — emissões 1–10, fatura dia 11, venc. dia 21"},
      valorFinal:2820.53, obs:"", pagamentoFaturaFeito:false},
 
     {status:"realizado", mes:"AGOSTO", dataCompra:"06/08/2026", solicitacao:"Recife - Fortaleza. Ida 11/08 à tarde, volta 14/08 após o almoço. Hotel 11 a 14/08.",
-     viajante:"Eudes Figueredo", pax:{nome:"Eudes Santos de Figueredo", cpf:"", nascimento:"", email:""}, dataViagem:"Ida 11/08 · Volta 14/08",
+     viajante:"Eudes Figueredo", pax:{nome:"Eudes Santos de Figueredo"}, dataViagem:"Ida 11/08 · Volta 14/08",
      aereo:{tem:"Sim", trecho:"Recife ⇄ Fortaleza", valor:2128.42, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"", valor:673.11, forma:"Faturado — emissões 1–10, fatura dia 11, venc. dia 21"},
      valorFinal:2820.53, obs:"", pagamentoFaturaFeito:false},
 
     {status:"realizado", mes:"AGOSTO", dataCompra:"06/08/2026", solicitacao:"Maceió - Fortaleza. Somente ida 10/08, hotel 10/08 a 11/08 em Ribeirão.",
-     viajante:"Alice Moraes", pax:{nome:"Alice Souza de Moraes Maciel", email:"", nascimento:"", cpf:""}, dataViagem:"10/08",
+     viajante:"Alice Moraes", pax:{nome:"Alice Souza de Moraes Maciel"}, dataViagem:"10/08",
      aereo:{tem:"Sim", trecho:"Maceió ⇄ Ribeirão Preto", valor:2943.72, fee:19, forma:"Master 3x"},
      hospedagem:{tem:"Sim", detalhe:"Ribeirão Preto", valor:283.80, forma:"Faturado — emissões 1–10, fatura dia 11, venc. dia 21"},
      valorFinal:3246.52, obs:"", pagamentoFaturaFeito:false}
@@ -727,10 +727,8 @@
       dataCompra: isoToBR(r.data_compra),
       solicitacao: r.solicitacao || "",
       viajante: r.viajante || "",
-      pax:{
-        nome: r.pax_nome || "", cpf: r.pax_cpf || "", nascimento: isoToBR(r.pax_nascimento),
-        email: r.pax_email || "", telefone: r.pax_telefone || "", rg: r.pax_rg || ""
-      },
+      pax:{nome: r.pax_nome || "", cpf: r.pax_cpf || "", nascimento: isoToBR(r.pax_nascimento),
+        email: r.pax_email || "", telefone: r.pax_telefone || "", rg: r.pax_rg || ""},
       dataIda: r.data_ida || "",
       dataVolta: r.data_volta || "",
       aereo:{ tem: r.aereo_tem || "", origem: r.aereo_origem || "", destino: r.aereo_destino || "", valor: Number(r.aereo_valor)||0, fee: Number(r.aereo_fee)||0, forma: r.aereo_forma || "" },
@@ -1061,7 +1059,7 @@
   function openForm(existing){
     var t = existing ? JSON.parse(JSON.stringify(existing)) : {
       status:"aguardando_cotacao", mes:"", ano:"", dataCompra:"", solicitacao:"", viajante:"",
-      pax:{nome:"",cpf:"",nascimento:"",email:""}, dataIda:"", dataVolta:"",
+      pax:{nome:""}, dataIda:"", dataVolta:"",
       aereo:{tem:"Sim", origem:"", destino:"", valor:0, fee:19, forma:""},
       hospedagem:{tem:"Não", detalhe:"", valor:0, forma:""},
       valorFinal:0, obs:""
@@ -1177,11 +1175,9 @@
         viajante: f.get("viajante"),
         dataIda: f.get("dataIda"),
         dataVolta: f.get("dataVolta"),
-        pax:{
-          nome: f.get("paxNome"), cpf: f.get("paxCpf"),
+        pax:{nome: f.get("paxNome"), cpf: f.get("paxCpf"),
           nascimento: f.get("paxNasc"), email: f.get("paxEmail"),
-          telefone: f.get("paxTelefone")
-        },
+          telefone: f.get("paxTelefone")},
         aereo:{
           tem: f.get("aereoTem"), origem: f.get("aereoOrigem"), destino: f.get("aereoDestino"),
           valor: parseFloat(f.get("aereoValor"))||0, fee: parseFloat(f.get("aereoFee"))||0,
@@ -1472,7 +1468,7 @@
       viajante: row.fullName || "(sem nome)",
       dataIda: dataIda,
       dataVolta: dataVolta,
-      pax:{ nome: row.fullName || "", cpf: row.cpf || "", nascimento: isoToBR(row.birthDate), email: row.email || "", telefone: row.phone || "" },
+      pax:{nome: row.fullName || "", cpf: row.cpf || "", nascimento: isoToBR(row.birthDate), email: row.email || "", telefone: row.phone || ""},
       aereo: precisaAereo
         ? {tem:"A cotar", origem: origem, destino: destino, valor: 0, fee: 0, forma: ""}
         : {tem:"Não", origem: "", destino: "", valor: 0, fee: 0, forma: ""},
@@ -1503,8 +1499,16 @@
         var imported = readImportedIds();
         var importedSet = {};
         imported.forEach(function(id){ importedSet[id] = true; });
+        // O controle acima (localStorage) é só deste navegador — em outro
+        // dispositivo ele começa vazio e reimportaria tudo de novo. Por isso
+        // a checagem principal é contra as viagens já carregadas do Supabase
+        // (dado compartilhado entre todos os dispositivos): se já existe uma
+        // viagem com esse formId, nunca duplica, não importa de onde o
+        // sincronismo esteja rodando.
+        var existingFormIds = {};
+        trips.forEach(function(t){ if(t.formId) existingFormIds[t.formId] = true; });
 
-        var novos = items.filter(function(row){ return !importedSet[row.id]; });
+        var novos = items.filter(function(row){ return !importedSet[row.id] && !existingFormIds[row.id]; });
         if(novos.length){
           var novosTrips = novos.map(function(row){
             imported.push(row.id);
