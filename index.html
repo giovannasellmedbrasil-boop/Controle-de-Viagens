@@ -286,6 +286,11 @@
       <option value="com">Com aéreo</option>
       <option value="sem">Sem aéreo</option>
     </select>
+    <select id="categoriaFilter">
+      <option value="todos">Categoria: todas</option>
+      <option value="eventos">Logística Eventos</option>
+      <option value="procedimentos">Logística Procedimentos</option>
+    </select>
     <div class="spacer"></div>
     <button class="btn btn-ghost btn-sm" id="btnExportPdf" title="Abre o diálogo de impressão do navegador — escolha &quot;Salvar como PDF&quot;">🖨 Exportar PDF</button>
     <button class="btn btn-ghost btn-sm" id="btnReset" title="Restaurar os dados originais da planilha">↺ Restaurar dados originais</button>
@@ -299,6 +304,7 @@
         <thead>
           <tr>
             <th>Status</th>
+            <th>Categoria</th>
             <th>Viajante / Solicitação</th>
             <th>Datas da viagem</th>
             <th>Aéreo</th>
@@ -555,7 +561,7 @@
      viajante:"Daniele Lopes", pax:{nome:"Daniele Caroline Lopes"}, dataViagem:"",
      aereo:{tem:"Não", trecho:"", valor:0, fee:0, forma:""},
      hospedagem:{tem:"Sim", detalhe:"", valor:1150.43, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
-     valorFinal:1150.43, obs:"Quarto dividido com Jarede Pereira (CPF [CPF removido]).", pagamentoFaturaFeito:false},
+     valorFinal:1150.43, obs:"Quarto dividido com Jarede Pereira (CPF [documento removido]).", pagamentoFaturaFeito:false},
 
     {status:"realizado", mes:"JULHO", dataCompra:"22/07/2026", solicitacao:"Aéreo e hospedagem SOLACI (vem de Recife)",
      viajante:"Thyally Rayssa", pax:{nome:"Thyally Rayssa Ribeiro da Silva"}, dataViagem:"",
@@ -603,7 +609,7 @@
      viajante:"Micheli Aparecida dos Santos", pax:{}, dataViagem:"",
      aereo:{tem:"Não", trecho:"", valor:0, fee:0, forma:""},
      hospedagem:{tem:"Sim", detalhe:"", valor:558.71, forma:"Faturado — emissões 21–30/31, fatura 01/08, venc. 11/08"},
-     valorFinal:558.71, obs:"Quarto dividido com Natasha Fonseca Moura Cavalcanti.", pagamentoFaturaFeito:false},
+     valorFinal:558.71, obs:"Quarto dividido com Natasha Fonseca Moura Cavalcanti (RG [documento removido], CPF [documento removido], DN [removido]).", pagamentoFaturaFeito:false},
 
     {status:"realizado", mes:"JULHO", dataCompra:"21/07/2026", solicitacao:"Aéreo ida — Guarulhos para Rondônia",
      viajante:"Ana Paula Ferreira da Silva", pax:{}, dataViagem:"31/07",
@@ -722,6 +728,7 @@
       formId: r.form_id || undefined,
       status: r.status,
       statusDetalhe: r.status_detalhe || "",
+      categoria: r.categoria || "",
       mes: r.mes || "",
       ano: r.ano || "",
       dataCompra: isoToBR(r.data_compra),
@@ -746,6 +753,7 @@
       form_id: t.formId || null,
       status: t.status,
       status_detalhe: t.statusDetalhe || null,
+      categoria: t.categoria || null,
       mes: t.mes || null,
       ano: t.ano || null,
       data_compra: brToISO(t.dataCompra),
@@ -829,7 +837,7 @@
   }
 
   var trips = [];
-  var state = { search:"", status:"todos", mes:"todos", aereo:"todos" };
+  var state = { search:"", status:"todos", mes:"todos", aereo:"todos", categoria:"todos" };
 
   // ---------------------------------------------------------------
   // Helpers
@@ -866,6 +874,22 @@
     {value:"aguardando_cotacao", label:"AGUARDANDO COTAÇÃO"},
     {value:"aguardando_aprovacao", label:"AGUARDANDO APROVAÇÃO"}
   ];
+  var CATEGORIA_OPTIONS = [
+    {value:"eventos", label:"Logística Eventos"},
+    {value:"procedimentos", label:"Logística Procedimentos"}
+  ];
+  function categoriaLabel(t){
+    var found = CATEGORIA_OPTIONS.filter(function(o){ return o.value === t.categoria; })[0];
+    return found ? found.label : "";
+  }
+  function categoriaSelect(name, value){
+    return '<select name="'+name+'">' +
+      '<option value=""'+(!value?" selected":"")+'>—</option>' +
+      CATEGORIA_OPTIONS.map(function(o){
+        return '<option value="'+o.value+'"'+(value===o.value?" selected":"")+'>'+o.label+'</option>';
+      }).join("") +
+      '</select>';
+  }
   function isPend(t){ return t.status === "aguardando_cotacao" || t.status === "aguardando_aprovacao"; }
   function hasAereo(t){ return !!(t.aereo && t.aereo.tem && t.aereo.tem.toLowerCase().indexOf("não") !== 0); }
   function statusLabel(t){
@@ -886,6 +910,7 @@
       if(state.mes !== "todos" && t.mes !== state.mes) return false;
       if(state.aereo === "com" && !hasAereo(t)) return false;
       if(state.aereo === "sem" && hasAereo(t)) return false;
+      if(state.categoria !== "todos" && t.categoria !== state.categoria) return false;
       if(q){
         var hay = [t.viajante, t.solicitacao, t.aereo && t.aereo.origem, t.aereo && t.aereo.destino, t.dataIda, t.dataVolta]
           .filter(Boolean).join(" ").toLowerCase();
@@ -918,6 +943,13 @@
       var hospValor = Number(t.hospedagem && t.hospedagem.valor) || 0;
       return s + fee + hospValor;
     }, 0);
+    var somaPorCategoria = {};
+    CATEGORIA_OPTIONS.forEach(function(o){ somaPorCategoria[o.value] = 0; });
+    list.forEach(function(t){
+      if(t.categoria && somaPorCategoria.hasOwnProperty(t.categoria)){
+        somaPorCategoria[t.categoria] += Number(t.valorFinal)||0;
+      }
+    });
 
     document.getElementById("kpis").innerHTML =
       '<div class="kpi"><div class="label">Viagens no período</div><div class="value tabular">'+ total +'</div><div class="hint">'+ pend +' pendente(s)</div></div>' +
@@ -926,7 +958,10 @@
       '<div class="kpi"><div class="label">Hospedagem</div><div class="value teal tabular">'+ money(somaHosp) +'</div></div>' +
       '<div class="kpi"><div class="label">Pago no Master 3x</div><div class="value teal tabular">'+ money(somaMaster) +'</div><div class="hint">valor das passagens (sem fee)</div></div>' +
       '<div class="kpi"><div class="label">Pago faturado</div><div class="value teal tabular">'+ money(somaFaturado) +'</div><div class="hint">hospedagem + fee de agência</div></div>' +
-      '<div class="kpi"><div class="label">Pendências</div><div class="value amber tabular">'+ pend +'</div><div class="hint">aguardando confirmação</div></div>';
+      '<div class="kpi"><div class="label">Pendências</div><div class="value amber tabular">'+ pend +'</div><div class="hint">aguardando confirmação</div></div>' +
+      CATEGORIA_OPTIONS.map(function(o){
+        return '<div class="kpi"><div class="label">'+ esc(o.label) +'</div><div class="value tabular">'+ money(somaPorCategoria[o.value]) +'</div><div class="hint">valor gasto nessa categoria</div></div>';
+      }).join("");
   }
 
   // ---------------------------------------------------------------
@@ -966,6 +1001,7 @@
         : '<span class="muted">—</span>';
       return '<tr data-id="'+ t.id +'">' +
         '<td>'+ pill +'</td>' +
+        '<td class="sol-text">'+ esc(categoriaLabel(t) || "—") +'</td>' +
         '<td><div class="via-name">'+ esc(t.viajante) +'</div><div class="sol-text">'+ esc(t.solicitacao) +'</div></td>' +
         '<td>Ida: '+ esc(t.dataIda||"—") +'<br>Volta: '+ esc(t.dataVolta||"—") +'<div class="sol-text tabular">Solicitado '+ esc(t.dataCompra) +' · '+ esc(t.mes) + (t.ano? "/"+esc(t.ano) : "") +'</div></td>' +
         '<td>'+ aereoTxt +'</td>' +
@@ -1009,6 +1045,7 @@
           '<header><h2>'+ esc(t.viajante) +'</h2><button class="btn btn-icon btn-ghost" data-close>✕</button></header>' +
           '<div class="body">' +
             '<div class="detail-row"><span class="k">Status</span><span class="v">'+ esc(statusLabel(t)) +'</span></div>' +
+            '<div class="detail-row"><span class="k">Categoria</span><span class="v">'+ esc(categoriaLabel(t) || "—") +'</span></div>' +
             '<div class="detail-row"><span class="k">Solicitação</span><span class="v">'+ esc(t.solicitacao) +'</span></div>' +
             '<div class="detail-row"><span class="k">Data da solicitação</span><span class="v">'+ esc(t.dataCompra) +' ('+ esc(t.mes) + (t.ano? "/"+esc(t.ano):"") +')</span></div>' +
             '<div class="detail-row"><span class="k">Data de ida</span><span class="v">'+ esc(t.dataIda||"—") +'</span></div>' +
@@ -1058,7 +1095,7 @@
   // ---------------------------------------------------------------
   function openForm(existing){
     var t = existing ? JSON.parse(JSON.stringify(existing)) : {
-      status:"aguardando_cotacao", mes:"", ano:"", dataCompra:"", solicitacao:"", viajante:"",
+      status:"aguardando_cotacao", categoria:"", mes:"", ano:"", dataCompra:"", solicitacao:"", viajante:"",
       pax:{nome:""}, dataIda:"", dataVolta:"",
       aereo:{tem:"Sim", origem:"", destino:"", valor:0, fee:19, forma:""},
       hospedagem:{tem:"Não", detalhe:"", valor:0, forma:""},
@@ -1084,6 +1121,7 @@
                     return '<option value="'+o.value+'"'+(t.status===o.value?" selected":"")+'>'+o.label+'</option>';
                   }).join("") +
                 '</select></div>' +
+                '<div class="field"><label>Categoria</label>'+categoriaSelect("categoria", t.categoria)+'</div>' +
                 '<div class="field full"><label>Solicitação / observação da viagem</label><textarea name="solicitacao">'+esc(t.solicitacao)+'</textarea></div>' +
                 '<div class="field"><label>Mês da solicitação</label><select name="mes">' +
                   '<option value=""'+(!t.mes?" selected":"")+'>—</option>' +
@@ -1168,6 +1206,7 @@
         pagamentoFaturaFeito: existing ? !!existing.pagamentoFaturaFeito : false,
         status: f.get("status"),
         statusDetalhe: existing ? existing.statusDetalhe : "",
+        categoria: f.get("categoria"),
         mes: (f.get("mes")||"").toUpperCase(),
         ano: f.get("ano"),
         dataCompra: f.get("dataCompra"),
@@ -1256,6 +1295,9 @@
   document.getElementById("aereoFilter").addEventListener("change", function(e){
     state.aereo = e.target.value; renderKpis(); renderTable();
   });
+  document.getElementById("categoriaFilter").addEventListener("change", function(e){
+    state.categoria = e.target.value; renderKpis(); renderTable();
+  });
   document.getElementById("statusFilter").addEventListener("click", function(e){
     var btn = e.target.closest("button[data-v]");
     if(!btn) return;
@@ -1320,13 +1362,13 @@
     return v;
   }
   document.getElementById("btnExportCsv").addEventListener("click", function(){
-    var cols = ["Status","Mês","Ano","Data solicitação","Solicitação","Viajante","Data de ida","Data de volta",
+    var cols = ["Status","Categoria","Mês","Ano","Data solicitação","Solicitação","Viajante","Data de ida","Data de volta",
       "Origem aéreo","Destino aéreo","Valor aéreo","Fee aéreo","Forma pgto aéreo","Hospedagem","Valor hospedagem",
       "Forma pgto hospedagem","Valor final","Pagamento da fatura referente feito","Observações"];
     var rows = [cols.join(";")];
     filtered().forEach(function(t){
       rows.push([
-        statusLabel(t), t.mes, t.ano||"", t.dataCompra, t.solicitacao, t.viajante, t.dataIda||"", t.dataVolta||"",
+        statusLabel(t), categoriaLabel(t), t.mes, t.ano||"", t.dataCompra, t.solicitacao, t.viajante, t.dataIda||"", t.dataVolta||"",
         (t.aereo&&t.aereo.origem)||"", (t.aereo&&t.aereo.destino)||"", (t.aereo&&t.aereo.valor)||0, (t.aereo&&t.aereo.fee)||0, (t.aereo&&t.aereo.forma)||"",
         (t.hospedagem&&t.hospedagem.detalhe)||(t.hospedagem&&t.hospedagem.tem)||"", (t.hospedagem&&t.hospedagem.valor)||0,
         (t.hospedagem&&t.hospedagem.forma)||"", t.valorFinal, (t.pagamentoFaturaFeito? "Sim":"Não"), t.obs||""
@@ -1347,6 +1389,7 @@
     filtrosTxt.push("Status: " + (state.status === "todos" ? "Todos" : (STATUS_OPTIONS.filter(function(o){return o.value===state.status;})[0]||{}).label || state.status));
     filtrosTxt.push("Mês: " + (state.mes === "todos" ? "Todos" : state.mes));
     filtrosTxt.push("Aéreo: " + (state.aereo === "todos" ? "Todos" : state.aereo === "com" ? "Com aéreo" : "Sem aéreo"));
+    filtrosTxt.push("Categoria: " + (state.categoria === "todos" ? "Todas" : (CATEGORIA_OPTIONS.filter(function(o){return o.value===state.categoria;})[0]||{}).label || state.categoria));
     if(state.search.trim()) filtrosTxt.push('Busca: "' + state.search.trim() + '"');
 
     var agora = new Date();
