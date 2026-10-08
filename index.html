@@ -158,6 +158,7 @@
   table.trips .money{font-weight:700;white-space:nowrap;}
   table.trips .muted{color:var(--text-muted);}
   table.trips .row-actions{display:flex;gap:6px;justify-content:flex-end;}
+  table.trips .categoria-inline{max-width:160px;padding:4px 6px;border:1px solid var(--border);border-radius:6px;background:var(--surface);font-size:12.5px;cursor:pointer;}
 
   .pill{
     display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;
@@ -1001,7 +1002,12 @@
         : '<span class="muted">—</span>';
       return '<tr data-id="'+ t.id +'">' +
         '<td>'+ pill +'</td>' +
-        '<td class="sol-text">'+ esc(categoriaLabel(t) || "—") +'</td>' +
+        '<td><select class="categoria-inline" data-act="categoria">' +
+          '<option value=""'+(!t.categoria?" selected":"")+'>—</option>' +
+          CATEGORIA_OPTIONS.map(function(o){
+            return '<option value="'+o.value+'"'+(t.categoria===o.value?" selected":"")+'>'+o.label+'</option>';
+          }).join("") +
+        '</select></td>' +
         '<td><div class="via-name">'+ esc(t.viajante) +'</div><div class="sol-text">'+ esc(t.solicitacao) +'</div></td>' +
         '<td>Ida: '+ esc(t.dataIda||"—") +'<br>Volta: '+ esc(t.dataVolta||"—") +'<div class="sol-text tabular">Solicitado '+ esc(t.dataCompra) +' · '+ esc(t.mes) + (t.ano? "/"+esc(t.ano) : "") +'</div></td>' +
         '<td>'+ aereoTxt +'</td>' +
@@ -1270,18 +1276,38 @@
 
   document.getElementById("tbody").addEventListener("change", function(e){
     var box = e.target.closest('input[data-act="pago"]');
-    if(!box) return;
-    var tr = e.target.closest("tr");
-    var id = tr.getAttribute("data-id");
-    var t = trips.find(function(x){ return x.id === id; });
-    if(!t) return;
-    t.pagamentoFaturaFeito = box.checked;
-    patchTrip(id, { pagamento_fatura_feito: box.checked }).catch(function(err){
-      console.error("[Supabase] falha ao salvar pagamento:", err);
-      box.checked = !box.checked;
+    if(box){
+      var tr = e.target.closest("tr");
+      var id = tr.getAttribute("data-id");
+      var t = trips.find(function(x){ return x.id === id; });
+      if(!t) return;
       t.pagamentoFaturaFeito = box.checked;
-      alert("Não foi possível salvar essa marcação no Supabase.\n\n" + err.message);
-    });
+      patchTrip(id, { pagamento_fatura_feito: box.checked }).catch(function(err){
+        console.error("[Supabase] falha ao salvar pagamento:", err);
+        box.checked = !box.checked;
+        t.pagamentoFaturaFeito = box.checked;
+        alert("Não foi possível salvar essa marcação no Supabase.\n\n" + err.message);
+      });
+      return;
+    }
+    var sel = e.target.closest('select[data-act="categoria"]');
+    if(sel){
+      var tr2 = e.target.closest("tr");
+      var id2 = tr2.getAttribute("data-id");
+      var t2 = trips.find(function(x){ return x.id === id2; });
+      if(!t2) return;
+      var anterior = t2.categoria;
+      t2.categoria = sel.value;
+      patchTrip(id2, { categoria: sel.value || null }).then(function(){
+        renderKpis();
+      }).catch(function(err){
+        console.error("[Supabase] falha ao salvar categoria:", err);
+        t2.categoria = anterior;
+        sel.value = anterior || "";
+        alert("Não foi possível salvar essa categoria no Supabase.\n\n" + err.message);
+      });
+      return;
+    }
   });
 
   document.getElementById("btnNew").addEventListener("click", function(){ openForm(null); });
