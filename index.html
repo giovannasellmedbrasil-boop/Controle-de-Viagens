@@ -291,6 +291,7 @@
       <option value="todos">Categoria: todas</option>
       <option value="eventos">Logística Eventos</option>
       <option value="procedimentos">Logística Procedimentos</option>
+      <option value="comercial">Logística Comercial</option>
     </select>
     <div class="spacer"></div>
     <button class="btn btn-ghost btn-sm" id="btnExportPdf" title="Abre o diálogo de impressão do navegador — escolha &quot;Salvar como PDF&quot;">🖨 Exportar PDF</button>
@@ -877,7 +878,8 @@
   ];
   var CATEGORIA_OPTIONS = [
     {value:"eventos", label:"Logística Eventos"},
-    {value:"procedimentos", label:"Logística Procedimentos"}
+    {value:"procedimentos", label:"Logística Procedimentos"},
+    {value:"comercial", label:"Logística Comercial"}
   ];
   function categoriaLabel(t){
     var found = CATEGORIA_OPTIONS.filter(function(o){ return o.value === t.categoria; })[0];
